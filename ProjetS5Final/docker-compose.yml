@@ -1,14 +1,46 @@
 ﻿# version: "3.8"   → obsolète, on peut le supprimer
 
 services:
+<<<<<<< HEAD
   # MySQL removed: backend now uses Firebase Realtime Database via REST
+=======
+  mysql:
+    image: mysql:8.0
+    container_name: garage_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: garage_elite
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+>>>>>>> 00c61219 (Add files via upload)
   backend:
     build: ./backend
     container_name: garage_backend
     ports:
       - "8000:80"
     volumes:
+      # Pour le développement : on monte tout le projet
       - ./backend/src:/var/www/html
+<<<<<<< HEAD
+=======
+      # Mais on protège les dossiers sensibles
+      - /var/www/html/vendor
+      - /var/www/html/node_modules   # au cas où
+    depends_on:
+      mysql:
+        condition: service_healthy
+>>>>>>> 00c61219 (Add files via upload)
     environment:
       FIREBASE_DB_URL: https://garage-5ef1a-default-rtdb.europe-west1.firebasedatabase.app/
       APP_DEBUG: "true"
@@ -24,7 +56,12 @@ services:
       - "3000:3000"
     volumes:
       - ./frontend:/app
+<<<<<<< HEAD
       - frontend_node_modules:/app/node_modules
+=======
+      # Très important : on ne remplace PAS node_modules du conteneur
+      - /app/node_modules
+>>>>>>> 00c61219 (Add files via upload)
     environment:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
@@ -32,6 +69,21 @@ services:
       - REACT_APP_API_URL=http://localhost:8000
     stdin_open: true
     tty: true
+<<<<<<< HEAD
+=======
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: garage_phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - mysql
+>>>>>>> 00c61219 (Add files via upload)
 
 volumes:
   frontend_node_modules:
