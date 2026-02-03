@@ -37,6 +37,7 @@
     background: rgba(255, 255, 255, 0.05);
     transition: all 0.3s ease;
 }
+<<<<<<< HEAD
 
 .back-to-home:hover {
     background: var(--primary);
@@ -667,3 +668,5 @@
         padding: 15px 20px;
     }
 }
+=======
+>>>>>>> 1ccc550b (Add files via upload)

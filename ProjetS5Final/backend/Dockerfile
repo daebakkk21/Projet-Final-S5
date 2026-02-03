@@ -1,11 +1,16 @@
 ﻿FROM php:8.2-apache
 
+<<<<<<< HEAD
 # Installer les dépendances
+=======
+# 1. Installer dépendances de base
+>>>>>>> 1ccc550b (Add files via upload)
 RUN apt-get update && apt-get install -y \
     curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip \
     && docker-php-ext-install pdo pdo_mysql mbstring gd zip \
     && a2enmod rewrite
 
+<<<<<<< HEAD
 # Supprimer le warning ServerName
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
@@ -16,10 +21,20 @@ WORKDIR /var/www/html
 COPY src/ .
 
 # Créer les dossiers nécessaires pour Laravel
+=======
+# 2. Définir répertoire
+WORKDIR /var/www/html
+
+# 3. Copier code source
+COPY src/ .
+
+# 4. Créer dossiers Laravel
+>>>>>>> 1ccc550b (Add files via upload)
 RUN mkdir -p storage/framework/{cache,sessions,testing,views} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache
 
+<<<<<<< HEAD
 # Permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 storage bootstrap/cache
@@ -35,4 +50,15 @@ COPY apache.conf /etc/apache2/sites-available/000-default.conf
 # On s'assure que le site est activé (normalement déjà fait, mais au cas où)
 RUN a2ensite 000-default.conf
 
+=======
+# 5. Permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 storage bootstrap/cache
+
+# 6. Fichier index.php par défaut
+RUN if [ ! -f "public/index.php" ]; then \
+    echo "<?php echo 'Garage Elite API'; ?>" > public/index.php; \
+    fi
+
+>>>>>>> 1ccc550b (Add files via upload)
 CMD ["apache2-foreground"]

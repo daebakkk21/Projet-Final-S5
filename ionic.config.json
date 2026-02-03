@@ -1,0 +1,7 @@
+{
+  "name": "finals5",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}

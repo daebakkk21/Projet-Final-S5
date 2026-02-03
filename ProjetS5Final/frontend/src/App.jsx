@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ﻿import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import "./style.css";
@@ -2015,10 +2016,36 @@ function Home() {
           </div>
         </div>
       </footer>
+=======
+﻿import React from "react";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import "./App.css";
+
+function Home() {
+  return (
+    <div style={{ 
+      background: "black", 
+      color: "red", 
+      minHeight: "100vh",
+      padding: "20px",
+      fontFamily: "Arial"
+    }}>
+      <h1>🚗 GARAGE ELITE</h1>
+      <p>Backend Laravel + Frontend React</p>
+      <div>
+        <Link to="/login" style={{ color: "white", marginRight: "20px" }}>
+          Connexion
+        </Link>
+        <Link to="/register" style={{ color: "white" }}>
+          Inscription
+        </Link>
+      </div>
+>>>>>>> 1ccc550b (Add files via upload)
     </div>
   );
 }
 
+<<<<<<< HEAD
 // Page de connexion
 function Login() {
   const [email, setEmail] = useState("");
@@ -2115,10 +2142,22 @@ function Login() {
           </div>
         </main>
       </div>
+=======
+function Login() {
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Connexion</h2>
+      <form>
+        <input type="email" placeholder="Email" /><br/>
+        <input type="password" placeholder="Mot de passe" /><br/>
+        <button>Se connecter</button>
+      </form>
+>>>>>>> 1ccc550b (Add files via upload)
     </div>
   );
 }
 
+<<<<<<< HEAD
 // Page d'inscription
 function Register() {
   const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", password: "" });
@@ -2222,10 +2261,24 @@ function Register() {
           </div>
         </main>
       </div>
+=======
+function Register() {
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Inscription</h2>
+      <form>
+        <input type="text" placeholder="Nom" /><br/>
+        <input type="text" placeholder="Prénom" /><br/>
+        <input type="email" placeholder="Email" /><br/>
+        <input type="password" placeholder="Mot de passe" /><br/>
+        <button>S'inscrire</button>
+      </form>
+>>>>>>> 1ccc550b (Add files via upload)
     </div>
   );
 }
 
+<<<<<<< HEAD
 // --- Admin Dashboard (frontend-only logic, works if API empty) ---
 function AdminDashboard() {
   const [interventions, setInterventions] = useState([]);
@@ -2875,6 +2928,8 @@ function Register() {
 }
 
 // Application principale
+=======
+>>>>>>> 1ccc550b (Add files via upload)
 function App() {
   return (
     <BrowserRouter>
@@ -2888,4 +2943,7 @@ function App() {
 }
 
 export default App;
+<<<<<<< HEAD
 >>>>>>> 00c61219 (Add files via upload)
+=======
+>>>>>>> 1ccc550b (Add files via upload)

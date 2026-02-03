@@ -1,0 +1,39 @@
+/* ===== AUTH PAGE LUXE ===== */
+.auth-page {
+    background: var(--secondary);
+    min-height: 100vh;
+}
+
+.auth-container {
+    min-height: 100vh;
+}
+
+/* ===== AUTH HEADER LUXE ===== */
+.auth-header-luxe {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+
+.back-to-home {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--accent-dark);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-full);
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}

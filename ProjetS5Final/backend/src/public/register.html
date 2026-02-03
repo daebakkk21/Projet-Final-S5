@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Garage Elite</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- Header Luxe -->
+        <header class="auth-header-luxe">
+            <a href="index.html" class="back-to-home">
+                <i class="fas fa-arrow-left"></i>
+                <span>Retour à l'accueil</span>
+            </a>
+            <a href="index.html" class="auth-logo">
+                <div class="logo-icon-small">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <span>GARAGE ELITE</span>
+            </a>
+        </header>
+
+        <!-- Main Auth Content -->
+        <main class="auth-main">
+            <div class="auth-wrapper">
+                <!-- Image Side (Desktop only) -->
+                <div class="auth-image-side register-image">
+                    <div class="image-overlay-dark"></div>
+                    <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80" 
+                alt="Mécanicien au travail">
+                    <div class="image-content">
+                        <div class="image-badge">
+                            <i class="fas fa-gem"></i>
+                            <span>COMMENCEZ L'AVENTURE</span>
+                        </div>
+                        <h2>Rejoignez la révolution <span class="highlight">automobile</span></h2>
+                        <p>Créez votre compte et bénéficiez de tous nos services premium</p>
+                        
+                        <div class="image-features">
+                            <div class="feature">
+                                <i class="fas fa-rocket"></i>
+                                <span>Configuration en 2 minutes</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-gift"></i>
+                                <span>14 jours d'essai gratuit</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-users"></i>
+                                <span>Communauté active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Side -->
+                <div class="auth-form-side">
+                    <div class="form-container">
+                        <div class="form-header">
+                            <div class="form-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <h1>Créer un compte</h1>
+                            <p class="form-subtitle">Rejoignez Garage Elite en quelques secondes</p>
+                        </div>
+
+                        <form id="registerForm" class="auth-form-luxe">
+                            <div class="form-row">
+                                <div class="form-group-luxe">
+                                    <label for="firstName">
+                                        <i class="fas fa-user"></i>
+                                        <span>Prénom</span>
+                                    </label>
+                                    <input type="text" 
+                                           id="firstName" 
+                                           name="firstName" 
+                                           placeholder="Votre prénom"
+                                           required
+                                           class="input-luxe">
+                                    <div class="input-border"></div>
+                                </div>
+
+                                <div class="form-group-luxe">
+                                    <label for="lastName">
+                                        <i class="fas fa-user"></i>
+                                        <span>Nom</span>
+                                    </label>
+                                    <input type="text" 
+                                           id="lastName" 
+                                           name="lastName" 
+                                           placeholder="Votre nom"
+                                           required
+                                           class="input-luxe">
+                                    <div class="input-border"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label for="email">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>Adresse email</span>
+                                </label>
+                                <input type="email" 
+                                       id="email" 
+                                       name="email" 
+                                       placeholder="votre@email.com"
+                                       required
+                                       class="input-luxe">
+                                <div class="input-border"></div>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label for="phone">
+                                    <i class="fas fa-phone"></i>
+                                    <span>Téléphone</span>
+                                </label>
+                                <input type="tel" 
+                                       id="phone" 
+                                       name="phone" 
+                                       placeholder="+33 6 12 34 56 78"
+                                       class="input-luxe">
+                                <div class="input-border"></div>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label for="password">
+                                    <i class="fas fa-key"></i>
+                                    <span>Mot de passe</span>
+                                </label>
+                                <div class="password-wrapper">
+                                    <input type="password" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Créez un mot de passe fort"
+                                           required
+                                           class="input-luxe">
+                                    <button type="button" class="password-toggle" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength">
+                                    <div class="strength-meter">
+                                        <div class="strength-bar" id="strengthBar"></div>
+                                    </div>
+                                    <div class="strength-label" id="strengthLabel">Force du mot de passe</div>
+                                </div>
+                                <div class="input-border"></div>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label for="confirmPassword">
+                                    <i class="fas fa-key"></i>
+                                    <span>Confirmer le mot de passe</span>
+                                </label>
+                                <div class="password-wrapper">
+                                    <input type="password" 
+                                           id="confirmPassword" 
+                                           name="confirmPassword" 
+                                           placeholder="Confirmez votre mot de passe"
+                                           required
+                                           class="input-luxe">
+                                    <button type="button" class="password-toggle" id="toggleConfirmPassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="input-border"></div>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label class="checkbox-luxe">
+                                    <input type="checkbox" name="newsletter" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-text">Recevoir les nouveautés et offres exclusives</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label class="checkbox-luxe">
+                                    <input type="checkbox" name="terms" required>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-text">
+                                        J'accepte les 
+                                        <a href="#" class="terms-link">conditions d'utilisation</a> 
+                                        et la 
+                                        <a href="#" class="terms-link">politique de confidentialité</a>
+                                    </span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="btn btn-luxe-primary btn-block">
+                                <i class="fas fa-user-check"></i>
+                                <span>Créer mon compte</span>
+                            </button>
+
+                            <div class="divider-luxe">
+                                <span>ou s'inscrire avec</span>
+                            </div>
+
+                            <div class="social-auth">
+                                <button type="button" class="btn btn-google-luxe">
+                                    <i class="fab fa-google"></i>
+                                    <span>Google</span>
+                                </button>
+                                <button type="button" class="btn btn-apple-luxe">
+                                    <i class="fab fa-apple"></i>
+                                    <span>Apple</span>
+                                </button>
+                            </div>
+
+                            <div class="auth-switch">
+                                <p>Vous avez déjà un compte ?</p>
+                                <a href="login.html" class="switch-link">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    <span>Se connecter</span>
+                                </a>
+                            </div>
+
+                            <div class="auth-benefits">
+                                <div class="benefits-header">
+                                    <i class="fas fa-gift"></i>
+                                    <span>Vos avantages</span>
+                                </div>
+                                <ul class="benefits-list">
+                                    <li><i class="fas fa-check"></i> 14 jours d'essai gratuit</li>
+                                    <li><i class="fas fa-check"></i> Support prioritaire</li>
+                                    <li><i class="fas fa-check"></i> Formation gratuite</li>
+                                    <li><i class="fas fa-check"></i> Accès à la communauté</li>
+                                </ul>
+                            </div>
+                        </form>
+
+                        <div class="auth-security">
+                            <i class="fas fa-lock"></i>
+                            <span>Cryptage SSL 256-bit - Vos données sont en sécurité</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>
