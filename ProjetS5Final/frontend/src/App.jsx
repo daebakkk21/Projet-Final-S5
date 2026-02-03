@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import "./style.css";
 import "./auth.css";
@@ -25,6 +25,12 @@ function Navigation() {
           </Link>
           <Link to="/register" className="nav-item nav-cta" onClick={() => setNavMenuOpen(false)}>
             <i className="fas fa-user-plus"></i><span>S'inscrire</span>
+          </Link>
+          <Link to="/frontend" className="nav-item" onClick={() => setNavMenuOpen(false)}>
+            <i className="fas fa-list"></i><span>Frontend</span>
+          </Link>
+          <Link to="/admin" className="nav-item" onClick={() => setNavMenuOpen(false)}>
+            <i className="fas fa-tools"></i><span>Admin</span>
           </Link>
         </div>
         <button className="mobile-toggle" onClick={() => setNavMenuOpen(!navMenuOpen)}>
@@ -129,7 +135,13 @@ function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         alert("Connexion réussie! " + data.user.nom);
-        window.location.href = "/";
+        // redirection automatique selon rôle (email admin détecté) :
+        const isAdmin = (data.user.role && data.user.role === 'admin') || (data.user.email && data.user.email.includes('admin'));
+        if (isAdmin) {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/client";
+        }
       } else {
         setError(data.message || "Erreur de connexion");
       }
@@ -308,6 +320,325 @@ function Register() {
   );
 }
 
+// --- Admin Dashboard (frontend-only logic, works if API empty) ---
+function AdminDashboard() {
+  const [interventions, setInterventions] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+  const [clientsCount, setClientsCount] = useState(0);
+  const [form, setForm] = useState({ name: '', price: '', duration: '', unit: 's' });
+
+  useEffect(() => {
+    // load types and repairs
+    fetch('http://localhost:8000/api/type_interventions')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setInterventions(d); })
+      .catch(() => {});
+
+    fetch('http://localhost:8000/api/repairs')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setRepairs(d); })
+      .catch(() => {});
+
+    fetch('http://localhost:8000/api/clients')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setClientsCount(d.length); })
+      .catch(() => {});
+  }, []);
+
+  // add a TYPE d'intervention (name + price + duration + unit)
+  const addIntervention = async (e) => {
+    e.preventDefault();
+    // convert duration to seconds based on unit
+    const val = parseFloat(form.duration) || 0;
+    let seconds = 0;
+    if (form.unit === 's') seconds = Math.round(val);
+    if (form.unit === 'h') seconds = Math.round(val * 3600);
+    if (form.unit === 'd') seconds = Math.round(val * 86400);
+
+    const payload = { nom: form.name || 'Intervention', prix: parseFloat(form.price) || 0, duree_secondes: seconds };
+    try {
+      const res = await fetch('http://localhost:8000/api/type_interventions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      const data = await res.json();
+      if (data && data.success === false) {
+        alert('Erreur: ' + (data.message || '')); return;
+      }
+      // optimistic update: insert new type at top
+      const newItem = { id: data.id || Date.now(), nom: payload.nom, prix: payload.prix, duree_secondes: payload.duree_secondes };
+      setInterventions(prev => [newItem, ...prev]);
+      setForm({ name: '', price: '', duration: '', unit: 's' });
+    } catch (err) {
+      alert('Erreur connexion API: ' + err.message);
+    }
+  };
+
+  // total amount is based on repairs fetched from backend
+  const totalAmount = repairs.reduce((s, r) => s + (Number(r.prix) || 0), 0);
+  // interventions en cours = nombre de voitures uniques avec réparations en statut 'En cours' (ou similaire)
+  const ongoing = (() => {
+    const inProgress = repairs.filter(r => (r.statut || '').toLowerCase().includes('en cours') || (r.statut || '').toLowerCase().includes('en-cours') || (r.statut || '').toLowerCase().includes('en_cours'));
+    const uniqueVoitures = new Set(inProgress.map(r => r.voiture_id || r.immatriculation || r.id));
+    return uniqueVoitures.size;
+  })();
+
+  const renderBarChart = () => {
+    const values = interventions.map(it => Number(it.duree_secondes || it.duration || 0));
+    if (values.length === 0) return null;
+    const labels = interventions.map(it => it.nom || it.name || '');
+    const max = Math.max(1, ...values);
+    const barSlot = 90; // space per bar (increased)
+    const width = Math.max(360, values.length * barSlot);
+    const height = 260; // increased height for readability
+    const barW = Math.max(36, Math.floor(width / values.length) - 18);
+
+    const gradId = 'barGrad';
+
+    return (
+      <svg className="chart" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{width: '100%', height: height}}>
+        <defs>
+          <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--primary)" />
+            <stop offset="100%" stopColor="var(--gold)" />
+          </linearGradient>
+        </defs>
+        {/* background */}
+        <rect x={0} y={0} width={width} height={height} rx="8" fill="rgba(255,255,255,0.02)" />
+        {values.map((v, i) => {
+          const h = Math.round((v / max) * (height - 70));
+          const x = i * (barW + 12) + 18;
+          const y = height - h - 40;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={barW} height={h} rx="4" fill={`url(#${gradId})`} />
+              <text x={x + barW/2} y={y - 10} fill="#fff" fontSize="14" fontWeight="700" textAnchor="middle">{v}</text>
+              <text x={x + barW/2} y={height - 8} fill="rgba(240,240,240,0.95)" fontSize="13" textAnchor="middle">{labels[i]}</text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  };
+
+  return (
+    <div className="admin-area">
+      <div className="container" style={{padding: '40px'}}>
+      <Navigation />
+      <h2>Admin — Gestion des interventions</h2>
+      <div style={{display: 'flex', gap: '20px', marginTop: '20px'}}>
+        <div style={{flex: 1}}>
+          <form onSubmit={addIntervention} style={{marginBottom: '20px'}}>
+            <div className="form-group-luxe">
+              <label>Nom de l'intervention</label>
+              <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input-luxe" />
+            </div>
+            <div className="form-row">
+              <div className="form-group-luxe">
+                <label>Prix (€)</label>
+                <input value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="input-luxe" />
+              </div>
+              <div className="form-group-luxe">
+                <label>Durée</label>
+                <div style={{display:'flex', gap:8}}>
+                  <input value={form.duration} onChange={e => setForm({...form, duration: e.target.value})} className="input-luxe" style={{flex:1}} />
+                  <select value={form.unit || 's'} onChange={e => setForm({...form, unit: e.target.value})} className="input-luxe" style={{width:140}}>
+                    <option value="s">Secondes (s)</option>
+                    <option value="h">Heures (h)</option>
+                    <option value="d">Jours (d)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <button className="btn btn-luxe-primary" type="submit">Ajouter le type</button>
+          </form>
+
+          <table className="table" style={{width: '100%'}}>
+            <thead>
+              <tr><th>Nom</th><th>Prix (€)</th><th>Durée (s)</th></tr>
+            </thead>
+            <tbody>
+              {interventions.length === 0 && <tr><td colSpan={3}>Aucun type d'intervention</td></tr>}
+              {interventions.map(it => (
+                <tr key={it.id}>
+                  <td>{it.nom}</td>
+                  <td>{it.prix !== undefined ? Number(it.prix).toFixed(2) : '0.00'}</td>
+                  <td>{it.duree_secondes}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          <div style={{marginTop: 20}}>
+            <h4>Réparations (base)</h4>
+            <div className="card">
+              {repairs.length === 0 ? (
+                <p>Aucune réparation enregistrée.</p>
+              ) : (
+                <div className="table-responsive">
+                  <table className="table repairs-table">
+                    <thead>
+                      <tr><th>Voiture</th><th>Intervention</th><th>Prix</th><th>Durée (s)</th><th>Statut</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                      {repairs.map(r => (
+                        <tr key={r.id}>
+                          <td>{r.immatriculation || r.voiture_id || '—'}</td>
+                          <td>{r.intervention || '—'}</td>
+                          <td>{r.prix ? `${Number(r.prix).toFixed(2)} €` : '—'}</td>
+                          <td>{r.duree_secondes || '—'}</td>
+                          <td><span className={`status ${(r.statut || '').toLowerCase().replace(/\s+/g,'-')}`}>{r.statut || '—'}</span></td>
+                          <td>{r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <aside style={{width: '320px'}}>
+          <div className="card" style={{padding: '16px', marginBottom: '16px'}}>
+            <h4>Statistiques</h4>
+            <p>Montant total: <strong>€{totalAmount.toFixed(2)}</strong></p>
+            <p>Interventions en cours: <strong>{ongoing}</strong></p>
+            <p>Nombre de clients: <strong>{clientsCount}</strong></p>
+          </div>
+          <div className="card" style={{padding: '16px'}}>
+            <h4>Actions</h4>
+            <p>Les actions CRUD peuvent être connectées à l'API existante plus tard.</p>
+          </div>
+        </aside>
+      </div>
+      {/* Full-width chart below */}
+      <div style={{marginTop: 30}}>
+        <div className="card">
+          <h4>Durée des interventions (s)</h4>
+          {interventions.length === 0 ? <p>Aucune donnée pour le graphique</p> : (
+            <div style={{width: '100%'}}>
+              {renderBarChart()}
+            </div>
+          )}
+        </div>
+      </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Client page: affiche QR code renvoyant vers l'app mobile (placeholder) ---
+function ClientPage() {
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user'));
+      setUser(u);
+    } catch (e) { setUser(null); }
+  }, []);
+
+  const target = user ? `https://mobile.garage-elite.app/?user=${encodeURIComponent(user.email||user.nom||'guest')}` : 'https://mobile.garage-elite.app/';
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(target)}`;
+
+  return (
+    <div className="auth-page">
+      <Navigation />
+      <div className="qr-center">
+        <h2>Client — Accès mobile</h2>
+        <p className="lead">Rejoignez-nous sur l'app mobile</p>
+        <div className="qr-wrap">
+          <img src={qr} alt="QR code vers l'app mobile" className="qr-image" />
+        </div>
+        <p><a href={target} target="_blank" rel="noreferrer" className="btn btn-luxe-primary">Ouvrir l'application</a></p>
+      </div>
+    </div>
+  );
+}
+
+// --- Frontend page: liste clients / réparations en cours (vue publique) ---
+function FrontendList() {
+  const [clients, setClients] = useState([]);
+  const [repairs, setRepairs] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/api/clients')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setClients(d); else if (d && d.clients) setClients(d.clients); })
+      .catch(() => setClients([]));
+
+    fetch('http://localhost:8000/api/repairs')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setRepairs(d); else if (d && d.repairs) setRepairs(d.repairs); })
+      .catch(() => setRepairs([]));
+  }, []);
+
+  return (
+    <div className="container" style={{padding: '40px'}}>
+      <Navigation />
+      <div style={{display: 'flex', gap: 24, alignItems: 'flex-start', marginTop: 24}}>
+        <div style={{flex: 1}}>
+          <div className="card">
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <h3>Clients</h3>
+              <span className="badge">{clients.length}</span>
+            </div>
+            <div className="table-responsive" style={{marginTop: 12}}>
+              {clients.length === 0 ? (
+                <p>Aucun client trouvé.</p>
+              ) : (
+                <table className="table clients-table">
+                  <thead>
+                    <tr><th>Nom</th><th>Email</th><th>Inscrit le</th></tr>
+                  </thead>
+                  <tbody>
+                    {clients.map(c => (
+                      <tr key={c.id || c.email}>
+                        <td>{(c.prenom || '') + ' ' + (c.nom || '')}</td>
+                        <td>{c.email}</td>
+                        <td>{c.created_at ? new Date(c.created_at).toLocaleString() : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div style={{width: 560}}>
+          <div className="card">
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+              <h3>Réparations en cours</h3>
+              <span className="badge">{repairs.length}</span>
+            </div>
+            <div className="table-responsive" style={{marginTop: 12}}>
+              {repairs.length === 0 ? (
+                <p>Aucune réparation en cours.</p>
+              ) : (
+                <table className="table repairs-table">
+                  <thead>
+                    <tr><th>Client / Voiture</th><th>Intervention</th><th>Prix</th><th>Durée (s)</th><th>Statut</th></tr>
+                  </thead>
+                  <tbody>
+                    {repairs.map(r => (
+                      <tr key={r.id}>
+                        <td>{r.immatriculation ? `${r.immatriculation}` : (r.client_email || '—')}</td>
+                        <td>{r.intervention || '—'}</td>
+                        <td>{r.prix !== null && r.prix !== undefined ? `${Number(r.prix).toFixed(2)} €` : '—'}</td>
+                        <td>{r.duree_secondes || '—'}</td>
+                        <td><span className={`status ${(r.statut || '').toLowerCase().replace(/\s+/g,'-')}`}>{r.statut || '—'}</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // Application principale
 function App() {
   return (
@@ -316,6 +647,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/client" element={<ClientPage />} />
+        <Route path="/frontend" element={<FrontendList />} />
       </Routes>
     </BrowserRouter>
   );
