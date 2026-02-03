@@ -1,29 +1,38 @@
 ﻿FROM php:8.2-apache
 
-# 1. Installer dépendances de base
+# Installer les dépendances
 RUN apt-get update && apt-get install -y \
     curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip \
     && docker-php-ext-install pdo pdo_mysql mbstring gd zip \
     && a2enmod rewrite
 
-# 2. Définir répertoire
+# Supprimer le warning ServerName
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Définir le répertoire de travail
 WORKDIR /var/www/html
 
-# 3. Copier code source
+# Copier le code source Laravel
 COPY src/ .
 
-# 4. Créer dossiers Laravel
+# Créer les dossiers nécessaires pour Laravel
 RUN mkdir -p storage/framework/{cache,sessions,testing,views} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache
 
-# 5. Permissions
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache
 
-# 6. Fichier index.php par défaut
+# Fallback si public/index.php n'existe pas (pour debug)
 RUN if [ ! -f "public/index.php" ]; then \
-    echo "<?php echo 'Garage Elite API'; ?>" > public/index.php; \
+        echo "<?php echo 'Garage Elite API - dossier public manquant'; ?>" > public/index.php; \
     fi
+
+# === IMPORTANT : on copie la config Apache personnalisée ===
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+
+# On s'assure que le site est activé (normalement déjà fait, mais au cas où)
+RUN a2ensite 000-default.conf
 
 CMD ["apache2-foreground"]
