@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Garage Elite</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <!-- Header Luxe -->
+        <header class="auth-header-luxe">
+            <a href="index.html" class="back-to-home">
+                <i class="fas fa-arrow-left"></i>
+                <span>Retour à l'accueil</span>
+            </a>
+            <a href="index.html" class="auth-logo">
+                <div class="logo-icon-small">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <span>GARAGE ELITE</span>
+            </a>
+        </header>
+
+        <!-- Main Auth Content -->
+        <main class="auth-main">
+            <div class="auth-wrapper">
+                <!-- Image Side (Desktop only) -->
+                <div class="auth-image-side">
+                    <div class="image-overlay-dark"></div>
+                    <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80" 
+                         alt="Voiture de sport luxe">
+                    <div class="image-content">
+                        <div class="image-badge">
+                            <i class="fas fa-star"></i>
+                            <span>ACCÈS PRIVILÉGIÉ</span>
+                        </div>
+                        <h2>Bienvenue dans l'univers <span class="highlight">Garage Elite</span></h2>
+                        <p>Accédez à votre espace personnel et gérez vos véhicules en toute simplicité</p>
+                        
+                        <div class="image-features">
+                            <div class="feature">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Sécurité maximale</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-bolt"></i>
+                                <span>Interface ultra-rapide</span>
+                            </div>
+                            <div class="feature">
+                                <i class="fas fa-headset"></i>
+                                <span>Support 24/7</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Side -->
+                <div class="auth-form-side">
+                    <div class="form-container">
+                        <div class="form-header">
+                            <div class="form-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <h1>Connexion</h1>
+                            <p class="form-subtitle">Accédez à votre compte Garage Elite</p>
+                        </div>
+
+                        <form id="loginForm" class="auth-form-luxe">
+                            <div class="form-group-luxe">
+                                <label for="email">
+                                    <i class="fas fa-envelope"></i>
+                                    <span>Adresse email</span>
+                                </label>
+                                <input type="email" 
+                                       id="email" 
+                                       name="email" 
+                                       placeholder="votre@email.com"
+                                       required
+                                       class="input-luxe">
+                                <div class="input-border"></div>
+                            </div>
+
+                            <div class="form-group-luxe">
+                                <label for="password">
+                                    <i class="fas fa-key"></i>
+                                    <span>Mot de passe</span>
+                                </label>
+                                <div class="password-wrapper">
+                                    <input type="password" 
+                                           id="password" 
+                                           name="password" 
+                                           placeholder="Votre mot de passe"
+                                           required
+                                           class="input-luxe">
+                                    <button type="button" class="password-toggle" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="input-border"></div>
+                            </div>
+
+                            <div class="form-options-luxe">
+                                <label class="checkbox-luxe">
+                                    <input type="checkbox" name="remember">
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-text">Se souvenir de moi</span>
+                                </label>
+                                <a href="#" class="forgot-link">Mot de passe oublié ?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-luxe-primary btn-block">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Se connecter</span>
+                            </button>
+
+                            <div class="divider-luxe">
+                                <span>ou continuer avec</span>
+                            </div>
+
+                            <div class="social-auth">
+                                <button type="button" class="btn btn-google-luxe">
+                                    <i class="fab fa-google"></i>
+                                    <span>Google</span>
+                                </button>
+                                <button type="button" class="btn btn-apple-luxe">
+                                    <i class="fab fa-apple"></i>
+                                    <span>Apple</span>
+                                </button>
+                            </div>
+
+                            <div class="auth-switch">
+                                <p>Vous n'avez pas de compte ?</p>
+                                <a href="register.html" class="switch-link">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Créer un compte</span>
+                                </a>
+                            </div>
+
+                            <div class="auth-demo">
+                                <div class="demo-header">
+                                    <i class="fas fa-vial"></i>
+                                    <span>Identifiants de démonstration</span>
+                                </div>
+                                <div class="demo-credentials">
+                                    <div class="credential">
+                                        <span class="cred-label">Email :</span>
+                                        <code class="cred-value">demo@garage-elite.com</code>
+                                    </div>
+                                    <div class="credential">
+                                        <span class="cred-label">Mot de passe :</span>
+                                        <code class="cred-value">Demo123!</code>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="auth-security">
+                            <i class="fas fa-shield-check"></i>
+                            <span>Vos données sont protégées par un cryptage AES-256</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

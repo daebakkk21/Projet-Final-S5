@@ -1,0 +1,78 @@
+﻿# version: "3.8"   → obsolète, on peut le supprimer
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: garage_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: garage_elite
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: garage_backend
+    ports:
+      - "8000:80"
+    volumes:
+      # Pour le développement : on monte tout le projet
+      - ./backend/src:/var/www/html
+      # Mais on protège les dossiers sensibles
+      - /var/www/html/vendor
+      - /var/www/html/node_modules   # au cas où
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: garage_elite
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      # Ajoute ces lignes si tu utilises Laravel Sanctum ou autre
+      SANCTUM_STATEFUL_DOMAINS: localhost:3000,127.0.0.1:3000
+      SESSION_DOMAIN: localhost
+
+  frontend:
+    build: ./frontend
+    container_name: garage_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      # Très important : on ne remplace PAS node_modules du conteneur
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+      - REACT_APP_API_URL=http://localhost:8000
+    stdin_open: true
+    tty: true
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: garage_phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:

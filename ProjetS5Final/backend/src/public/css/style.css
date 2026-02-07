@@ -1,0 +1,57 @@
+/* ===== VARIABLES LUXE ROUGE & NOIR ===== */
+:root {
+    /* Palette Luxe Rouge & Noir */
+    --primary: #ff0000; /* Rouge vif */
+    --primary-dark: #cc0000;
+    --primary-light: #ff3333;
+    --secondary: #000000; /* Noir profond */
+    --secondary-light: #1a1a1a;
+    --secondary-lighter: #2a2a2a;
+    --accent: #ffffff; /* Blanc pur */
+    --accent-dark: #f0f0f0;
+    --accent-light: #ffffff;
+    --gold: #ffd700; /* Or pour accents */
+    --gold-dark: #b8860b;
+    
+    /* Utilitaires */
+    --success: #00cc00;
+    --warning: #ff9900;
+    --danger: #ff3333;
+    --info: #0099ff;
+    
+    /* Ombres */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --shadow-red: 0 4px 20px rgba(255, 0, 0, 0.3);
+    
+    /* Bordures */
+    --border-radius: 12px;
+    --border-radius-lg: 20px;
+    --border-radius-full: 50px;
+}
+
+/* ===== RESET & BASE ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--accent);
+    background-color: var(--secondary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
