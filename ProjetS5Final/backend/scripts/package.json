@@ -1,0 +1,8 @@
+{
+  "name": "firebase-import-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^11.10.1"
+  }
+}

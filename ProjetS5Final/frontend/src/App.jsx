@@ -29,6 +29,12 @@ function Navigation() {
           <Link to="/frontend" className="nav-item" onClick={() => setNavMenuOpen(false)}>
             <i className="fas fa-list"></i><span>Frontend</span>
           </Link>
+          <Link to="/repairs" className="nav-item" onClick={() => setNavMenuOpen(false)}>
+            <i className="fas fa-car-side"></i><span>Réparations</span>
+          </Link>
+          <Link to="/garage" className="nav-item" onClick={() => setNavMenuOpen(false)}>
+            <i className="fas fa-warehouse"></i><span>Garage</span>
+          </Link>
           <Link to="/admin" className="nav-item" onClick={() => setNavMenuOpen(false)}>
             <i className="fas fa-tools"></i><span>Admin</span>
           </Link>
@@ -373,12 +379,38 @@ function AdminDashboard() {
 
   // total amount is based on repairs fetched from backend
   const totalAmount = repairs.reduce((s, r) => s + (Number(r.prix) || 0), 0);
-  // interventions en cours = nombre de voitures uniques avec réparations en statut 'En cours' (ou similaire)
+  // totals paid / unpaid across all repairs
+  const totalPaid = repairs.reduce((s, r) => s + ((r.paid === true) ? (Number(r.prix) || 0) : 0), 0);
+  const totalUnpaid = repairs.reduce((s, r) => s + ((r.paid !== true) ? (Number(r.prix) || 0) : 0), 0);
+
+  // interventions en cours = nombre de voitures uniques avec réparations en statut 'En cours' (ou similar) OR in_garage
   const ongoing = (() => {
-    const inProgress = repairs.filter(r => (r.statut || '').toLowerCase().includes('en cours') || (r.statut || '').toLowerCase().includes('en-cours') || (r.statut || '').toLowerCase().includes('en_cours'));
+    const inProgress = repairs.filter(r => (
+      (r.in_garage === true) ||
+      (r.statut || '').toLowerCase().includes('en cours') ||
+      (r.statut || '').toLowerCase().includes('en-cours') ||
+      (r.statut || '').toLowerCase().includes('en_cours')
+    ));
     const uniqueVoitures = new Set(inProgress.map(r => r.voiture_id || r.immatriculation || r.id));
     return uniqueVoitures.size;
   })();
+
+  // helper to compute a friendly status when backend provides none
+  const formatStatus = (r) => {
+    const now = Date.now();
+    const endTs = r.end_time ? Date.parse(r.end_time) : null;
+    if (r.in_garage) {
+      if (endTs && endTs <= now) {
+        return r.paid ? 'Terminée' : 'Terminée (attente paiement)';
+      }
+      return 'En cours';
+    }
+    // not in garage
+    if (endTs && endTs <= now) {
+      return r.paid ? 'Terminée' : 'Terminée (attente paiement)';
+    }
+    return r.statut || 'Planifiée';
+  };
 
   const renderBarChart = () => {
     const values = interventions.map(it => Number(it.duree_secondes || it.duration || 0));
@@ -484,7 +516,7 @@ function AdminDashboard() {
                           <td>{r.intervention || '—'}</td>
                           <td>{r.prix ? `${Number(r.prix).toFixed(2)} €` : '—'}</td>
                           <td>{r.duree_secondes || '—'}</td>
-                          <td><span className={`status ${(r.statut || '').toLowerCase().replace(/\s+/g,'-')}`}>{r.statut || '—'}</span></td>
+                          <td><span className={`status ${formatStatus(r).toLowerCase().replace(/\s+/g,'-')}`}>{formatStatus(r)}</span></td>
                           <td>{r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</td>
                         </tr>
                       ))}
@@ -497,15 +529,13 @@ function AdminDashboard() {
         </div>
 
         <aside style={{width: '320px'}}>
-          <div className="card" style={{padding: '16px', marginBottom: '16px'}}>
-            <h4>Statistiques</h4>
-            <p>Montant total: <strong>€{totalAmount.toFixed(2)}</strong></p>
-            <p>Interventions en cours: <strong>{ongoing}</strong></p>
-            <p>Nombre de clients: <strong>{clientsCount}</strong></p>
-          </div>
-          <div className="card" style={{padding: '16px'}}>
-            <h4>Actions</h4>
-            <p>Les actions CRUD peuvent être connectées à l'API existante plus tard.</p>
+          <div className="card" style={{padding: '16px', marginBottom: '16px', background: '#000', border: '1px solid #111'}}>
+            <h4 style={{color: '#fff'}}>Statistiques</h4>
+            <p style={{color: '#fff'}}>Montant total: <strong>€{totalAmount.toFixed(2)}</strong></p>
+            <p style={{color: '#fff'}}>Montant payé: <strong>€{totalPaid.toFixed(2)}</strong></p>
+            <p style={{color: '#fff'}}>Montant non payé: <strong>€{totalUnpaid.toFixed(2)}</strong></p>
+            <p style={{color: '#fff'}}>Interventions en cours: <strong>{ongoing}</strong></p>
+            <p style={{color: '#fff'}}>Nombre de clients: <strong>{clientsCount}</strong></p>
           </div>
         </aside>
       </div>
@@ -536,7 +566,9 @@ function ClientPage() {
   }, []);
 
   const target = user ? `https://mobile.garage-elite.app/?user=${encodeURIComponent(user.email||user.nom||'guest')}` : 'https://mobile.garage-elite.app/';
-  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(target)}`;
+  // Use local QR image if provided, otherwise fallback to generated QR
+  const qrLocal = '/images/Lien.jpeg';
+  const qr = qrLocal; // switched to local image
 
   return (
     <div className="auth-page">
@@ -569,6 +601,23 @@ function FrontendList() {
       .then(d => { if (Array.isArray(d)) setRepairs(d); else if (d && d.repairs) setRepairs(d.repairs); })
       .catch(() => setRepairs([]));
   }, []);
+
+  // helper to compute a friendly status when backend provides none
+  const formatStatus = (r) => {
+    const now = Date.now();
+    const endTs = r.end_time ? Date.parse(r.end_time) : null;
+    if (r.in_garage) {
+      if (endTs && endTs <= now) {
+        return r.paid ? 'Terminée' : 'Terminée (attente paiement)';
+      }
+      return 'En cours';
+    }
+    // not in garage
+    if (endTs && endTs <= now) {
+      return r.paid ? 'Terminée' : 'Terminée (attente paiement)';
+    }
+    return r.statut || 'Planifiée';
+  };
 
   return (
     <div className="container" style={{padding: '40px'}}>
@@ -624,7 +673,7 @@ function FrontendList() {
                         <td>{r.intervention || '—'}</td>
                         <td>{r.prix !== null && r.prix !== undefined ? `${Number(r.prix).toFixed(2)} €` : '—'}</td>
                         <td>{r.duree_secondes || '—'}</td>
-                        <td><span className={`status ${(r.statut || '').toLowerCase().replace(/\s+/g,'-')}`}>{r.statut || '—'}</span></td>
+                        <td><span className={`status ${formatStatus(r).toLowerCase().replace(/\s+/g,'-')}`}>{formatStatus(r)}</span></td>
                       </tr>
                     ))}
                   </tbody>
@@ -633,6 +682,248 @@ function FrontendList() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Repairs page: list voitures en attente / actions ---
+// --- Repairs page: voitures en attente d'entrer au garage ---
+function RepairsPage() {
+  const [repairs, setRepairs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const load = () => {
+    fetch('http://localhost:8000/api/repairs')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setRepairs(d); else setRepairs([]); setLoading(false); })
+      .catch(e => { console.error(e); setRepairs([]); setLoading(false); });
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const addToGarage = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/repairs/${id}/add_to_garage`, { method: 'POST' });
+      const j = await res.json();
+      if (!j.success) alert('❌ ' + (j.message || 'Erreur')); 
+      else { alert('✓ Voiture mise au garage!'); load(); }
+    } catch (e) { alert('Erreur réseau: ' + e.message); }
+  };
+
+  const waitingRepairs = repairs.filter(r => !r.in_garage);
+
+  return (
+    <div className="container" style={{padding: 24}}>
+      <Navigation />
+      <div style={{marginTop: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <h2>📋 Voitures en attente</h2>
+        <button onClick={() => { setLoading(true); load(); }} style={{padding: '8px 16px', background: '#666', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer'}}>↻</button>
+      </div>
+
+      {loading && <div style={{marginTop: 12, fontSize: 14, color: '#666'}}>Chargement...</div>}
+
+      {!loading && waitingRepairs.length === 0 && (
+        <div style={{marginTop: 12, padding: 20, background: '#0f0f0f', borderRadius: 8, border: '1px solid #222'}}>
+          <strong style={{color: '#ddd'}}>✓ Aucune voiture en attente - toutes sont au garage!</strong>
+        </div>
+      )}
+
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16, marginTop: 18}}>
+        {waitingRepairs.map(r => (
+          <div className="card" key={r.id} style={{padding: 16}}>
+            <h3 style={{marginTop: 0}}><strong>{r.immatriculation || 'Voiture #' + r.id}</strong></h3>
+            <div style={{fontSize: 13, color: '#666', marginBottom: 8}}>🔧 {r.intervention || '—'}</div>
+            <div style={{fontSize: 13, marginBottom: 12}}>💰 {r.prix || 0}€ | ⏱️ {r.duree_secondes || '?'}s</div>
+            <button 
+              className="btn btn-luxe-primary" 
+              onClick={() => addToGarage(r.id)}
+              style={{width: '100%'}}
+            >
+              ➕ Mettre au garage
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Garage page: simulation de garage avec 2 slots ---
+function GaragePage() {
+  const [repairs, setRepairs] = useState([]);
+  const [now, setNow] = useState(Date.now());
+  
+  const load = () => {
+    fetch('http://localhost:8000/api/repairs')
+      .then(r => r.json())
+      .then(d => { if (Array.isArray(d)) setRepairs(d); else setRepairs([]); })
+      .catch(e => { console.error(e); setRepairs([]); });
+  };
+
+  useEffect(() => { 
+    load(); 
+    const t = setInterval(() => { setNow(Date.now()); load(); }, 1000); 
+    return () => clearInterval(t); 
+  }, []);
+
+  const markAsPaid = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/repairs/${id}/mark-paid`, { method: 'POST' });
+      const j = await res.json();
+      if (!j.success) alert('Erreur: ' + (j.message || '')); 
+      else { alert('✓ Paiement enregistré!'); load(); }
+    } catch (e) { alert('Erreur: ' + e.message); }
+  };
+
+  const removeFromGarage = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/repairs/${id}/remove-from-garage`, { method: 'POST' });
+      const j = await res.json();
+      if (!j.success) alert('Erreur: ' + (j.message || '')); 
+      else { alert('✓ Voiture récupérée!'); load(); }
+    } catch (e) { alert('Erreur: ' + e.message); }
+  };
+
+  const garageRepairs = repairs.filter(r => r.in_garage);
+  
+  const renderSlot = (index) => {
+    const repair = garageRepairs[index];
+    if (!repair) {
+      return (
+        <div style={{
+          background: 'linear-gradient(135deg, #0b0b0b 0%, #1a1a1a 100%)',
+          border: '3px dashed #333',
+          borderRadius: 8,
+          padding: 20,
+          textAlign: 'center',
+          color: '#ccc',
+          fontSize: 48,
+          height: 240,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <span>🅿️</span>
+        </div>
+      );
+    }
+
+    const endTs = repair.end_time ? Date.parse(repair.end_time) : null;
+    const remaining = endTs ? Math.max(0, Math.round((endTs - now) / 1000)) : null;
+    const isFinished = remaining === 0;
+    const isPaid = repair.paid === true;
+    const canLeave = isFinished && isPaid;
+
+    return (
+      <div style={{
+        background: canLeave ? '#ffebee' : '#ffeb3b',
+        border: canLeave ? '3px solid #f44336' : '3px solid #fbc02d',
+        borderRadius: 8,
+        padding: 20,
+        textAlign: 'center',
+        position: 'relative',
+        height: 240,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between'
+      }}>
+        <div>
+          <div style={{fontSize: 32, marginBottom: 8}}>🚗</div>
+          <h4 style={{margin: '8px 0'}}>{repair.immatriculation || 'Voiture'}</h4>
+          <div style={{fontSize: 12, color: '#333', marginBottom: 4}}>
+            {repair.intervention || '—'}
+          </div>
+        </div>
+
+        <div style={{
+          fontSize: isFinished ? 16 : 24,
+          fontWeight: 700,
+          color: '#d32f2f',
+          fontFamily: 'monospace'
+        }}>
+          {remaining !== null ? (
+            <div>
+              {Math.floor(remaining/3600).toString().padStart(2,'0')}:{Math.floor((remaining%3600)/60).toString().padStart(2,'0')}:{(remaining%60).toString().padStart(2,'0')}
+              {isFinished && <div style={{fontSize: 14, color: '#333'}}>✓ Réparation finie</div>}
+            </div>
+          ) : (
+            <div>--:--:--</div>
+          )}
+        </div>
+
+        <div>
+          <div style={{
+            width: '100%',
+            padding: 8,
+            background: isPaid ? '#1b5e20' : '#3e2723',
+            color: '#fff',
+            borderRadius: 4,
+            textAlign: 'center',
+            marginBottom: 8,
+            fontSize: 12,
+            fontWeight: 'bold'
+          }}>
+            {isPaid ? `✓ Payé (${repair.prix || 0}€)` : `Non payé (${repair.prix || 0}€)`}
+          </div>
+
+          {canLeave && (
+            <button 
+              onClick={() => removeFromGarage(repair.id)}
+              style={{
+                width: '100%',
+                padding: 8,
+                background: '#2196F3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 4,
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 'bold'
+              }}
+            >
+              ✓ Récupérer voiture
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="container" style={{padding: 24}}>
+      <Navigation />
+      <h2 style={{marginTop: 18}}>🏭 Garage de réparation</h2>
+      <p style={{color: '#666', fontSize: 14}}>
+        Capacité: <strong>{garageRepairs.length} / 2</strong> voitures
+      </p>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 24,
+        marginTop: 24,
+        maxWidth: 900,
+        margin: '24px auto'
+      }}>
+        <div>
+          <h4 style={{textAlign: 'center', color: '#666'}}>Slot 1</h4>
+          {renderSlot(0)}
+        </div>
+        <div>
+          <h4 style={{textAlign: 'center', color: '#666'}}>Slot 2</h4>
+          {renderSlot(1)}
+        </div>
+      </div>
+
+      <div style={{marginTop: 32, padding: 16, background: '#000000', borderRadius: 8, border: '1px solid #111'}}>
+        <h4 style={{color: '#fff'}}>📊 Résumé</h4>
+        <ul style={{fontSize: 13, color: '#fff'}}>
+          <li><strong>Voitures au garage:</strong> {garageRepairs.length}/2</li>
+          <li><strong>En réparation:</strong> {garageRepairs.filter(r => !r.end_time || Math.round((Date.parse(r.end_time) - now) / 1000) > 0).length}</li>
+          <li><strong>Réparées (attente paiement):</strong> {garageRepairs.filter(r => r.end_time && Math.round((Date.parse(r.end_time) - now) / 1000) <= 0 && !r.paid).length}</li>
+          <li><strong>Prêtes à partir:</strong> {garageRepairs.filter(r => r.end_time && Math.round((Date.parse(r.end_time) - now) / 1000) <= 0 && r.paid).length}</li>
+        </ul>
       </div>
     </div>
   );
@@ -650,6 +941,8 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/client" element={<ClientPage />} />
         <Route path="/frontend" element={<FrontendList />} />
+        <Route path="/repairs" element={<RepairsPage />} />
+        <Route path="/garage" element={<GaragePage />} />
       </Routes>
     </BrowserRouter>
   );
