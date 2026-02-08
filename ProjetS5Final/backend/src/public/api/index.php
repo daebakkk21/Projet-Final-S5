@@ -268,16 +268,25 @@ function handleMarkAsPaid($repairId) {
     return ['success' => true, 'repair' => $res];
 }
 
-// Remove repair from garage (after finished + paid)
+// Remove repair from garage (archive it with recovered flag)
 function handleRemoveFromGarage($repairId) {
     if (!$repairId) return ['success' => false, 'message' => 'Missing repair id'];
     $reps = fb_get('reparations') ?: [];
     $target = $reps[$repairId] ?? null;
     if (!$target) return ['success' => false, 'message' => 'Réparation introuvable'];
     
-    // Delete the repair (voiture leaves)
+    // Mark as recovered and move to archives
+    $target['recovered'] = true;
+    $target['recovered_at'] = date('c');
+    $target['in_garage'] = false;
+    
+    // Archive: store in /archives/reparations/<id>
+    fb_put('archives/reparations/' . $repairId, $target);
+    
+    // Delete from active repairs
     fb_put('reparations/' . $repairId, null);
-    return ['success' => true, 'message' => 'Voiture récupérée et supprimée'];
+    
+    return ['success' => true, 'message' => 'Voiture récupérée et archivée'];
 }
 
 // DEBUG endpoint: create test repairs

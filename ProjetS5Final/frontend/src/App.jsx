@@ -781,11 +781,12 @@ function GaragePage() {
       const res = await fetch(`http://localhost:8000/api/repairs/${id}/remove-from-garage`, { method: 'POST' });
       const j = await res.json();
       if (!j.success) alert('Erreur: ' + (j.message || '')); 
-      else { alert('✓ Voiture récupérée!'); load(); }
+      else { alert('✓ Voiture récupérée et archivée!'); load(); }
     } catch (e) { alert('Erreur: ' + e.message); }
   };
 
-  const garageRepairs = repairs.filter(r => r.in_garage);
+  // Only show repairs that are in_garage and not yet recovered
+  const garageRepairs = repairs.filter(r => r.in_garage && r.recovered !== true);
   
   const renderSlot = (index) => {
     const repair = garageRepairs[index];
@@ -868,22 +869,19 @@ function GaragePage() {
           </div>
 
           {canLeave && (
-            <button 
-              onClick={() => removeFromGarage(repair.id)}
-              style={{
-                width: '100%',
-                padding: 8,
-                background: '#2196F3',
-                color: '#fff',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 'bold'
-              }}
-            >
-              ✓ Récupérer voiture
-            </button>
+            <div style={{
+              width: '100%',
+              padding: 8,
+              background: '#111',
+              color: '#fff',
+              borderRadius: 4,
+              textAlign: 'center',
+              marginBottom: 0,
+              fontSize: 13,
+              fontWeight: '700'
+            }}>
+              Prête — en attente de récupération
+            </div>
           )}
         </div>
       </div>
