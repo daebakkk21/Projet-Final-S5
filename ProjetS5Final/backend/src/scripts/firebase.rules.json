@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "clients": {
+      ".read": "auth != null",
+      ".write": "auth != null || !data.exists()",
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "admins": {
+      ".read": "root.child('clients').child(auth.uid).exists() && root.child('clients').child(auth.uid).child('isAdmin').val() == true",
+      ".write": "root.child('clients').child(auth.uid).exists() && root.child('clients').child(auth.uid).child('isAdmin').val() == true"
+    },
+    "voitures": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "statut_voitures": {
+      ".read": "true",
+      ".write": "false"
+    },
+    "type_interventions": {
+      ".read": "true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+    },
+    "reparations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "statut_reparations": {
+      ".read": "true",
+      ".write": "false"
+    },
+    "paiements": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "statut_paiements": {
+      ".read": "true",
+      ".write": "false"
+    }
+  }
+}
