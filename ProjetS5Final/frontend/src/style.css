@@ -29,11 +29,8 @@
     --border-radius: 12px;
     --border-radius-lg: 20px;
     --border-radius-full: 50px;
-<<<<<<< HEAD
     /* Hauteur estimée de la navbar fixe (utilisée pour offset du contenu) */
     --nav-height: 92px;
-=======
->>>>>>> 00c61219 (Add files via upload)
 }
 
 /* ===== RESET & BASE ===== */
@@ -53,14 +50,11 @@ body {
     background-color: var(--secondary);
     line-height: 1.6;
     overflow-x: hidden;
-<<<<<<< HEAD
     padding-top: var(--nav-height);
 }
 
 @media (max-width: 768px) {
     :root { --nav-height: 76px; }
-=======
->>>>>>> 00c61219 (Add files via upload)
 }
 
 .container {
@@ -811,7 +805,6 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-3px);
 }
 
-<<<<<<< HEAD
 /* ===== Small UI Helpers ===== */
 .card {
     background: linear-gradient(145deg, var(--secondary-lighter), var(--secondary-light));
@@ -906,8 +899,6 @@ h1, h2, h3, h4, h5, h6 {
 .chart .bar { fill: linear-gradient(135deg, var(--primary), var(--gold)); }
 
 
-=======
->>>>>>> 00c61219 (Add files via upload)
 .footer-col h4 {
     font-size: 18px;
     margin-bottom: 25px;
