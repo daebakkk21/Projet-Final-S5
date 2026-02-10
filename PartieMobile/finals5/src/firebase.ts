@@ -1,31 +1,21 @@
-<<<<<<< HEAD
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 
+// Utiliser l'URL de la Realtime Database fournie (sans ".json" ni paramètres)
 const firebaseConfig = {
-  apiKey: "AIzaSyBOxGQcSAKOcZEztFxjdaZ4thzOWHzbhbg",
-  authDomain: "login-finals5.firebaseapp.com",
-  projectId: "login-finals5",
-  storageBucket: "login-finals5.firebasestorage.app",
-  messagingSenderId: "811880324174",
-  appId: "1:811880324174:web:44bb1e9a87f9c8d8c4b71f"
+	databaseURL: "https://garage-5ef1a-default-rtdb.europe-west1.firebasedatabase.app"
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-=======
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBOxGQcSAKOcZEztFxjdaZ4thzOWHzbhbg",
-  authDomain: "login-finals5.firebaseapp.com",
-  projectId: "login-finals5",
-  storageBucket: "login-finals5.firebasestorage.app",
-  messagingSenderId: "811880324174",
-  appId: "1:811880324174:web:44bb1e9a87f9c8d8c4b71f"
-};
+export const db = getDatabase(app);
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
->>>>>>> 934ad8d6 (Add files via upload)
+// NOTE: We don't initialize Firebase Auth here because the project
+// uses a custom authentication flow based on Realtime Database.
+// Initializing `getAuth()` without a full firebaseConfig (apiKey, etc.)
+// causes `auth/invalid-api-key` errors in the browser. If you need
+// Firebase Auth later, provide the full config (apiKey, authDomain,...).
+
+export default app;
+
+

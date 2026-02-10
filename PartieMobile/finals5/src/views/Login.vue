@@ -1,12 +1,11 @@
-<<<<<<< HEAD
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar>
+      <ion-toolbar class="custom-toolbar">
         <ion-buttons slot="start">
-          <ion-back-button defaultHref="/home" text="Retour"></ion-back-button>
+          <ion-back-button defaultHref="/home" text="Retour" class="custom-back-button"></ion-back-button>
         </ion-buttons>
-        <ion-title>Connexion</ion-title>
+        <ion-title class="page-title">Connexion</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -62,45 +61,45 @@
           </div>
 
           <!-- Boutons -->
-          <div class="buttons-container">
-            <ion-button 
-              expand="block" 
-              @click="login" 
-              :disabled="isLoading"
-              color="success"
-              class="primary-btn"
-            >
-              <span v-if="!isLoading">Se connecter</span>
-              <ion-spinner v-else name="crescent"></ion-spinner>
-            </ion-button>
+          <div class="actions-section">
+            <div class="action-buttons">
+              <ion-button 
+                expand="block" 
+                @click="login" 
+                :disabled="isLoading"
+                class="primary-btn"
+              >
+                <span v-if="!isLoading">
+                  <ion-icon :icon="logInOutline" slot="start"></ion-icon>
+                  Se connecter
+                </span>
+                <ion-spinner v-else name="crescent"></ion-spinner>
+              </ion-button>
 
-            <ion-button 
-              fill="clear" 
-              routerLink="/register" 
-              routerDirection="forward" 
-              @click="allerInscription"
-              class="secondary-link"
-            >
-              <ion-icon :icon="personAddOutline" slot="start"></ion-icon>
-              Créer un compte
-            </ion-button>
+              <ion-button 
+                expand="block"
+                @click="goToRegister"
+                class="secondary-btn"
+              >
+                <ion-icon :icon="personAddOutline" slot="start"></ion-icon>
+                Créer un compte
+              </ion-button>
 
-            <ion-button 
-              fill="clear" 
-              routerLink="/home" 
-              routerDirection="back"
-              class="home-link"
-            >
-              <ion-icon :icon="homeOutline" slot="start"></ion-icon>
-              Retour à l'accueil
-            </ion-button>
+              <button 
+                @click="goToHome"
+                class="home-link"
+              >
+                <ion-icon :icon="homeOutline"></ion-icon>
+                Retour à l'accueil
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Aide -->
         <div class="help-section">
           <ion-text color="medium">
-            <small>Besoin d'aide ? Contactez-nous au support@autocare.fr</small>
+            <small>Besoin d'aide ? Contactez-nous au support@garageelite.fr</small>
           </ion-text>
         </div>
       </div>
@@ -110,8 +109,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase";
+import { db } from "@/firebase";
+import { ref as dbRef, get } from "firebase/database";
 import { useRouter } from "vue-router";
 import {
   IonPage,
@@ -134,7 +133,8 @@ import {
   personAddOutline,
   homeOutline,
   alertCircleOutline,
-  carSportOutline
+  carSportOutline,
+  logInOutline
 } from 'ionicons/icons';
 
 const email = ref("");
@@ -168,11 +168,18 @@ const onPasswordInput = (ev: any) => {
   password.value = val || native;
 };
 
+const goToRegister = () => {
+  router.push('/register');
+};
+
+const goToHome = () => {
+  router.push('/home');
+};
+
 const login = async () => {
   error.value = "";
   isLoading.value = true;
 
-  // Force active element blur to ensure ion-input commits latest value
   if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
     document.activeElement.blur();
   }
@@ -187,47 +194,103 @@ const login = async () => {
   }
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, effectiveEmail, effectivePassword);
-    await router.replace({ name: 'Acceuil' });
-  } catch (e: any) {
-    console.error("Login error:", e);
-    if (e.code === 'auth/invalid-email') {
-      error.value = 'Email invalide.';
-    } else if (e.code === 'auth/user-not-found') {
-      error.value = 'Aucun compte trouvé pour cet email.';
-    } else if (e.code === 'auth/wrong-password') {
-      error.value = 'Mot de passe incorrect.';
-    } else if (e.code === 'auth/too-many-requests') {
-      error.value = 'Trop de tentatives. Réessayer plus tard.';
-    } else {
-      error.value = e.message || 'Erreur lors de la connexion.';
+    const snapshot = await get(dbRef(db, "clients"));
+
+    if (!snapshot.exists()) {
+      error.value = "Aucun client trouvé";
+      isLoading.value = false;
+      return;
     }
+
+    let connectedClient: any = null;
+
+    snapshot.forEach((child) => {
+      const clientId = child.key as string;
+      const client = child.val();
+
+      if (client && client.email === effectiveEmail && effectivePassword === clientId) {
+        connectedClient = {
+          id: clientId,
+          ...client,
+        };
+      }
+    });
+
+    if (connectedClient) {
+      localStorage.setItem("client", JSON.stringify(connectedClient));
+      console.log('Login: connectedClient', connectedClient);
+      // rediriger vers la page d'accueil nommée 'Acceuil'
+      router.replace({ name: 'Acceuil' }).catch(() => {});
+    } else {
+      error.value = "Email ou mot de passe incorrect";
+    }
+  } catch (e: any) {
+    console.error("Login (RTDB) error:", e);
+    error.value = e?.message || "Erreur lors de la connexion.";
   } finally {
     isLoading.value = false;
-  }
-};
-
-const allerInscription = async () => {
-  try {
-    await router.push({ name: 'Register' });
-  } catch (err) {
-    console.error('Navigation to /register failed:', err);
-    router.push('/register').catch(e => console.error('Fallback push failed:', e));
   }
 };
 </script>
 
 <style scoped>
-/* Variables de thème */
+/* Variables de thème basées sur la palette orange/noir */
 :root {
-  --primary-bg: #11161E;
-  --accent-color: #23CE6B;
-  --primary-text: #FFFFFF;
-  --secondary-bg: #19212C;
-  --input-bg: #1E2633;
-  --border-color: #2D3748;
-  --error-color: #FF6B6B;
-  --success-color: #23CE6B;
+  --brand-orange: #E85002;
+  --brand-orange-dark: #C10801;
+  --brand-orange-light: #F16001;
+  --primary-black: #000000;
+  --primary-white: #F9F9F9;
+  --gray-medium: #646464;
+  --gray-light: #A7A7A7;
+  --gray-dark: #333333;
+  
+  /* Variables dérivées */
+  --primary-bg: var(--primary-white);
+  --card-bg: #FFFFFF;
+  --input-bg: #FFFFFF;
+  --primary-text: var(--primary-black);
+  --secondary-text: var(--gray-dark);
+  --border-color: rgba(0, 0, 0, 0.12);
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --error-color: #DC2626;
+  --success-color: #059669;
+}
+
+/* Styles généraux */
+ion-page {
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+}
+
+ion-content {
+  --background: var(--primary-bg);
+  --color: var(--primary-text);
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 20px;
+  --padding-bottom: 20px;
+}
+
+/* Toolbar personnalisé */
+.custom-toolbar {
+  --background: var(--primary-white);
+  --border-color: var(--border-color);
+  --color: var(--primary-black);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.custom-back-button {
+  --color: var(--brand-orange);
+  --color-hover: var(--brand-orange-dark);
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-black);
 }
 
 /* Conteneur principal */
@@ -235,51 +298,53 @@ const allerInscription = async () => {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 56px);
-  max-width: 400px;
+  max-width: 440px;
   margin: 0 auto;
-  padding: 0 8px;
 }
 
 /* En-tête */
 .login-header {
   text-align: center;
-  padding: 40px 0 30px;
+  padding: 24px 0 32px;
 }
 
 .logo-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, var(--accent-color), #1DB954);
-  border-radius: 16px;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark), var(--brand-orange-light));
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(232, 80, 2, 0.25);
 }
 
 .logo-icon ion-icon {
-  color: white;
-  font-size: 28px;
+  color: var(--primary-white);
+  font-size: 36px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .welcome-title {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 800;
   margin: 0 0 8px;
-  color: white;
+  color: var(--primary-black);
+  letter-spacing: -0.5px;
 }
 
 .welcome-subtitle {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  color: var(--gray-medium);
   margin: 0;
+  font-weight: 500;
   line-height: 1.4;
 }
 
 /* Section formulaire */
 .form-section {
   flex: 1;
-  padding: 0 8px;
 }
 
 .input-group {
@@ -288,10 +353,10 @@ const allerInscription = async () => {
 
 .input-label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-dark);
+  margin-bottom: 10px;
 }
 
 .custom-input {
@@ -301,18 +366,27 @@ const allerInscription = async () => {
   --padding-end: 16px;
   --padding-top: 16px;
   --padding-bottom: 16px;
-  --placeholder-color: rgba(255, 255, 255, 0.4);
-  --color: white;
-  border: 1px solid var(--border-color);
+  --placeholder-color: var(--gray-light);
+  --color: var(--primary-black);
+  border: 1.5px solid var(--border-color);
   font-size: 16px;
+  transition: all 0.2s ease;
+  background: var(--input-bg);
+  box-shadow: 0 2px 8px var(--shadow-color);
 }
 
 .custom-input.has-error {
   border-color: var(--error-color);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.custom-input:focus-within {
+  border-color: var(--brand-orange);
+  box-shadow: 0 4px 12px rgba(232, 80, 2, 0.2);
 }
 
 .custom-input ion-icon[slot="start"] {
-  color: var(--accent-color);
+  color: var(--brand-orange);
   margin-right: 12px;
   font-size: 20px;
 }
@@ -321,77 +395,136 @@ const allerInscription = async () => {
 .error-message {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.2);
-  border-radius: 8px;
-  padding: 12px 16px;
+  gap: 10px;
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 20px;
   margin-bottom: 24px;
   animation: fadeIn 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--error-color);
 }
 
 .error-message ion-icon {
-  color: var(--error-color);
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
-.error-message span {
-  color: var(--error-color);
-  font-size: 14px;
-  line-height: 1.4;
+/* Section des actions */
+.actions-section {
+  margin-top: auto;
+  padding-bottom: 20px;
 }
 
-/* Conteneur boutons (identique à HomePage) */
-.buttons-container {
-  width: 100%;
-  max-width: 400px;
-  margin: 40px auto 0 auto;
-  padding: 0 16px;
-  box-sizing: border-box;
-  text-align: center;
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
-/* Bouton principal (identique à HomePage) */
+/* CORRECTION : BOUTON PRINCIPAL - Orange uni (Se connecter) */
 .primary-btn {
-  --background: var(--accent-color);
-  --background-activated: #1DB954;
-  --background-hover: #1DB954;
-  --color: var(--primary-text);
+  --background: var(--brand-orange);
+  --background-activated: #D14802; /* Version plus foncée pour le press */
+  --background-focused: var(--brand-orange);
+  --background-hover: var(--brand-orange);
   --border-radius: 12px;
-  --padding-top: 18px;
-  --padding-bottom: 18px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  --box-shadow: 0 4px 12px rgba(232, 80, 2, 0.25);
+  height: 46px;
   font-weight: 600;
-  font-size: 16px;
-  margin: 0 auto;
-  width: 100%;
-  max-width: 280px;
-  box-shadow: 0 4px 12px rgba(35, 206, 107, 0.3);
-  display: block;
+  font-size: 15px;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0.3px;
+  --color: var(--primary-white);
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.primary-btn::part(native) {
+  background: var(--brand-orange) !important;
+  box-shadow: 0 4px 12px rgba(232, 80, 2, 0.25) !important;
+}
+
+.primary-btn:active::part(native) {
+  background: #D14802 !important;
+  box-shadow: 0 2px 8px rgba(232, 80, 2, 0.35) !important;
+}
+
+/* CORRECTION : BOUTON SECONDAIRE - Dégradé orange/noir (Créer un compte) */
+.secondary-btn {
+  --background: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark), var(--brand-orange-light));
+  --background-activated: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark));
+  --background-focused: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark), var(--brand-orange-light));
+  --background-hover: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark), var(--brand-orange-light));
+  --border-radius: 12px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  height: 46px;
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: 0.3px;
+  --color: var(--primary-white);
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+  border: none;
+}
+
+.secondary-btn::part(native) {
+  background: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark), var(--brand-orange-light)) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.secondary-btn:active::part(native) {
+  background: linear-gradient(135deg, var(--primary-black), var(--brand-orange-dark)) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
 .primary-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-/* Boutons secondaires */
-.secondary-link {
-  --color: var(--accent-color);
-  font-weight: 600;
-  font-size: 15px;
-  margin-top: 16px;
-  text-transform: none;
+/* Styles des icônes dans les boutons */
+.primary-btn ion-icon,
+.secondary-btn ion-icon {
+  color: var(--primary-white) !important;
+  margin-right: 8px;
 }
 
-.secondary-link ion-icon {
-  font-size: 18px;
-}
-
+/* Lien Retour à l'accueil */
 .home-link {
-  --color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 340px;
+  height: 40px;
+  margin: 8px auto 0;
+  background: transparent;
+  border: none;
+  color: var(--gray-medium);
   font-size: 14px;
-  margin-top: 8px;
-  text-transform: none;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.home-link:active {
+  color: var(--brand-orange);
 }
 
 .home-link ion-icon {
@@ -408,41 +541,75 @@ const allerInscription = async () => {
 
 .help-section small {
   font-size: 12px;
+  color: var(--gray-medium);
 }
 
 /* Responsive */
 @media (max-height: 650px) {
   .login-header {
-    padding: 20px 0 20px;
+    padding: 16px 0 24px;
   }
   
   .logo-icon {
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     margin-bottom: 16px;
   }
   
+  .logo-icon ion-icon {
+    font-size: 32px;
+  }
+  
   .welcome-title {
-    font-size: 22px;
+    font-size: 24px;
+  }
+  
+  .action-buttons {
+    margin-bottom: 24px;
+  }
+  
+  .primary-btn,
+  .secondary-btn {
+    height: 44px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    max-width: 320px;
   }
 }
 
-/* Support safe area iPhone */
+@media (min-width: 768px) {
+  .login-container {
+    max-width: 400px;
+    padding-top: 20px;
+  }
+}
+
+/* Pour les très petits écrans (iPhone SE, etc.) */
+@media (max-width: 350px) {
+  .primary-btn,
+  .secondary-btn {
+    max-width: 300px;
+    height: 44px;
+    font-size: 14.5px;
+  }
+  
+  .home-link {
+    max-width: 300px;
+  }
+  
+  ion-content {
+    --padding-start: 16px;
+    --padding-end: 16px;
+  }
+}
+
+/* Safe area support pour iPhone */
 @supports (padding: max(0px)) {
   ion-content {
     --padding-start: max(20px, env(safe-area-inset-left));
     --padding-end: max(20px, env(safe-area-inset-right));
     --padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  
-  .login-container {
-    padding-left: max(8px, env(safe-area-inset-left));
-    padding-right: max(8px, env(safe-area-inset-right));
-  }
-  
-  .buttons-container {
-    padding-left: max(16px, env(safe-area-inset-left));
-    padding-right: max(16px, env(safe-area-inset-right));
+    --padding-top: max(20px, env(safe-area-inset-top));
   }
 }
 
@@ -457,474 +624,4 @@ const allerInscription = async () => {
     transform: translateY(0);
   }
 }
-
-/* Ajustement pour les champs focus */
-.custom-input:focus-within {
-  border-color: var(--accent-color);
-}
-=======
-<template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button defaultHref="/home" text="Retour"></ion-back-button>
-        </ion-buttons>
-        <ion-title>Connexion</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
-    <ion-content class="ion-padding">
-      <div class="login-container">
-        <!-- En-tête -->
-        <div class="login-header">
-          <div class="logo-icon">
-            <ion-icon :icon="carSportOutline"></ion-icon>
-          </div>
-          <h1 class="welcome-title">Bon retour !</h1>
-          <p class="welcome-subtitle">Connectez-vous à votre compte Garage Elite</p>
-        </div>
-
-        <!-- Formulaire -->
-        <div class="form-section">
-          <div class="input-group">
-            <ion-label class="input-label">Adresse email</ion-label>
-            <ion-input 
-              ref="emailInput" 
-              v-model:value="email" 
-              type="email" 
-              @ionInput="onEmailInput"
-              @input="onEmailInput" 
-              placeholder="exemple@email.com"
-              class="custom-input"
-              :class="{ 'has-error': error && error.includes('email') }"
-            >
-              <ion-icon :icon="mailOutline" slot="start"></ion-icon>
-            </ion-input>
-          </div>
-
-          <div class="input-group">
-            <ion-label class="input-label">Mot de passe</ion-label>
-            <ion-input 
-              ref="passwordInput" 
-              v-model:value="password" 
-              type="password" 
-              @ionInput="onPasswordInput"
-              @input="onPasswordInput" 
-              placeholder="Votre mot de passe"
-              class="custom-input"
-              :class="{ 'has-error': error && error.includes('password') }"
-            >
-              <ion-icon :icon="lockClosedOutline" slot="start"></ion-icon>
-            </ion-input>
-          </div>
-
-          <!-- Message d'erreur -->
-          <div v-if="error" class="error-message">
-            <ion-icon :icon="alertCircleOutline"></ion-icon>
-            <span>{{ error }}</span>
-          </div>
-
-          <!-- Boutons -->
-          <div class="buttons-container">
-            <ion-button 
-              expand="block" 
-              @click="login" 
-              :disabled="isLoading"
-              color="success"
-              class="primary-btn"
-            >
-              <span v-if="!isLoading">Se connecter</span>
-              <ion-spinner v-else name="crescent"></ion-spinner>
-            </ion-button>
-
-            <ion-button 
-              fill="clear" 
-              routerLink="/register" 
-              routerDirection="forward" 
-              @click="allerInscription"
-              class="secondary-link"
-            >
-              <ion-icon :icon="personAddOutline" slot="start"></ion-icon>
-              Créer un compte
-            </ion-button>
-
-            <ion-button 
-              fill="clear" 
-              routerLink="/home" 
-              routerDirection="back"
-              class="home-link"
-            >
-              <ion-icon :icon="homeOutline" slot="start"></ion-icon>
-              Retour à l'accueil
-            </ion-button>
-          </div>
-        </div>
-
-        <!-- Aide -->
-        <div class="help-section">
-          <ion-text color="medium">
-            <small>Besoin d'aide ? Contactez-nous au support@autocare.fr</small>
-          </ion-text>
-        </div>
-      </div>
-    </ion-content>
-  </ion-page>
-</template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase";
-import { useRouter } from "vue-router";
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
-  IonBackButton,
-  IonTitle,
-  IonContent,
-  IonInput,
-  IonText,
-  IonButton,
-  IonSpinner,
-  IonLabel,
-  IonIcon
-} from '@ionic/vue';
-import {
-  mailOutline,
-  lockClosedOutline,
-  personAddOutline,
-  homeOutline,
-  alertCircleOutline,
-  carSportOutline
-} from 'ionicons/icons';
-
-const email = ref("");
-const password = ref("");
-const isLoading = ref(false);
-const error = ref("");
-const emailInput = ref<HTMLElement | null>(null);
-const passwordInput = ref<HTMLElement | null>(null);
-const router = useRouter();
-
-const readNativeValue = (el: any) => {
-  if (!el) return null;
-  try {
-    const shadow = (el as HTMLElement).shadowRoot;
-    const native = (shadow && shadow.querySelector('input')) || (el.querySelector && el.querySelector('input')) || null;
-    return native ? native.value : null;
-  } catch (err) {
-    return null;
-  }
-};
-
-const onEmailInput = (ev: any) => {
-  const val = ev?.detail?.value ?? ev?.target?.value ?? "";
-  const native = readNativeValue(emailInput.value) ?? "";
-  email.value = val || native;
-};
-
-const onPasswordInput = (ev: any) => {
-  const val = ev?.detail?.value ?? ev?.target?.value ?? "";
-  const native = readNativeValue(passwordInput.value) ?? "";
-  password.value = val || native;
-};
-
-const login = async () => {
-  error.value = "";
-  isLoading.value = true;
-
-  // Force active element blur to ensure ion-input commits latest value
-  if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
-
-  const effectiveEmail = (email.value || readNativeValue(emailInput.value) || "").trim();
-  const effectivePassword = password.value || readNativeValue(passwordInput.value) || "";
-
-  if (!effectiveEmail || !effectivePassword) {
-    error.value = "Veuillez saisir l'email et le mot de passe.";
-    isLoading.value = false;
-    return;
-  }
-
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, effectiveEmail, effectivePassword);
-    await router.replace({ name: 'Acceuil' });
-  } catch (e: any) {
-    console.error("Login error:", e);
-    if (e.code === 'auth/invalid-email') {
-      error.value = 'Email invalide.';
-    } else if (e.code === 'auth/user-not-found') {
-      error.value = 'Aucun compte trouvé pour cet email.';
-    } else if (e.code === 'auth/wrong-password') {
-      error.value = 'Mot de passe incorrect.';
-    } else if (e.code === 'auth/too-many-requests') {
-      error.value = 'Trop de tentatives. Réessayer plus tard.';
-    } else {
-      error.value = e.message || 'Erreur lors de la connexion.';
-    }
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const allerInscription = async () => {
-  try {
-    await router.push({ name: 'Register' });
-  } catch (err) {
-    console.error('Navigation to /register failed:', err);
-    router.push('/register').catch(e => console.error('Fallback push failed:', e));
-  }
-};
-</script>
-
-<style scoped>
-/* Variables de thème */
-:root {
-  --primary-bg: #11161E;
-  --accent-color: #23CE6B;
-  --primary-text: #FFFFFF;
-  --secondary-bg: #19212C;
-  --input-bg: #1E2633;
-  --border-color: #2D3748;
-  --error-color: #FF6B6B;
-  --success-color: #23CE6B;
-}
-
-/* Conteneur principal */
-.login-container {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 56px);
-  max-width: 400px;
-  margin: 0 auto;
-  padding: 0 8px;
-}
-
-/* En-tête */
-.login-header {
-  text-align: center;
-  padding: 40px 0 30px;
-}
-
-.logo-icon {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, var(--accent-color), #1DB954);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-}
-
-.logo-icon ion-icon {
-  color: white;
-  font-size: 28px;
-}
-
-.welcome-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px;
-  color: white;
-}
-
-.welcome-subtitle {
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Section formulaire */
-.form-section {
-  flex: 1;
-  padding: 0 8px;
-}
-
-.input-group {
-  margin-bottom: 24px;
-}
-
-.input-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 8px;
-}
-
-.custom-input {
-  --background: var(--input-bg);
-  --border-radius: 12px;
-  --padding-start: 16px;
-  --padding-end: 16px;
-  --padding-top: 16px;
-  --padding-bottom: 16px;
-  --placeholder-color: rgba(255, 255, 255, 0.4);
-  --color: white;
-  border: 1px solid var(--border-color);
-  font-size: 16px;
-}
-
-.custom-input.has-error {
-  border-color: var(--error-color);
-}
-
-.custom-input ion-icon[slot="start"] {
-  color: var(--accent-color);
-  margin-right: 12px;
-  font-size: 20px;
-}
-
-/* Message d'erreur */
-.error-message {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.2);
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-bottom: 24px;
-  animation: fadeIn 0.3s ease;
-}
-
-.error-message ion-icon {
-  color: var(--error-color);
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.error-message span {
-  color: var(--error-color);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-/* Conteneur boutons (identique à HomePage) */
-.buttons-container {
-  width: 100%;
-  max-width: 400px;
-  margin: 40px auto 0 auto;
-  padding: 0 16px;
-  box-sizing: border-box;
-  text-align: center;
-}
-
-/* Bouton principal (identique à HomePage) */
-.primary-btn {
-  --background: var(--accent-color);
-  --background-activated: #1DB954;
-  --background-hover: #1DB954;
-  --color: var(--primary-text);
-  --border-radius: 12px;
-  --padding-top: 18px;
-  --padding-bottom: 18px;
-  font-weight: 600;
-  font-size: 16px;
-  margin: 0 auto;
-  width: 100%;
-  max-width: 280px;
-  box-shadow: 0 4px 12px rgba(35, 206, 107, 0.3);
-  display: block;
-}
-
-.primary-btn:disabled {
-  opacity: 0.5;
-}
-
-/* Boutons secondaires */
-.secondary-link {
-  --color: var(--accent-color);
-  font-weight: 600;
-  font-size: 15px;
-  margin-top: 16px;
-  text-transform: none;
-}
-
-.secondary-link ion-icon {
-  font-size: 18px;
-}
-
-.home-link {
-  --color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-  margin-top: 8px;
-  text-transform: none;
-}
-
-.home-link ion-icon {
-  font-size: 16px;
-}
-
-/* Section aide */
-.help-section {
-  text-align: center;
-  padding: 20px 0 30px;
-  border-top: 1px solid var(--border-color);
-  margin-top: 20px;
-}
-
-.help-section small {
-  font-size: 12px;
-}
-
-/* Responsive */
-@media (max-height: 650px) {
-  .login-header {
-    padding: 20px 0 20px;
-  }
-  
-  .logo-icon {
-    width: 56px;
-    height: 56px;
-    margin-bottom: 16px;
-  }
-  
-  .welcome-title {
-    font-size: 22px;
-  }
-}
-
-/* Support safe area iPhone */
-@supports (padding: max(0px)) {
-  ion-content {
-    --padding-start: max(20px, env(safe-area-inset-left));
-    --padding-end: max(20px, env(safe-area-inset-right));
-    --padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  
-  .login-container {
-    padding-left: max(8px, env(safe-area-inset-left));
-    padding-right: max(8px, env(safe-area-inset-right));
-  }
-  
-  .buttons-container {
-    padding-left: max(16px, env(safe-area-inset-left));
-    padding-right: max(16px, env(safe-area-inset-right));
-  }
-}
-
-/* Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Ajustement pour les champs focus */
-.custom-input:focus-within {
-  border-color: var(--accent-color);
-}
->>>>>>> 934ad8d6 (Add files via upload)
 </style>

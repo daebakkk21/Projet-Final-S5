@@ -1,161 +1,114 @@
-<<<<<<< HEAD
 <template>
   <ion-page>
-    <!-- <ion-header>
-      <ion-toolbar>
-        <ion-title>Mon Espace</ion-title>
-        <ion-buttons slot="end">
-          <ion-button @click="logout" :disabled="isLoggingOut">
-            <ion-icon :icon="logOutOutline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header> -->
-
     <ion-content class="ion-padding">
-      <div class="welcome-container">
-        <!-- Section de bienvenue -->
-        <div class="welcome-section">
-          <div class="user-avatar">
-            <ion-icon :icon="personCircleOutline"></ion-icon>
-          </div>
-          <h1 class="welcome-title">Bienvenue sur Garage Elite</h1>
-          <p class="welcome-subtitle">Votre espace de gestion automobile</p>
+      <div class="dashboard-container">
+        <!-- En-tête -->
+        <div class="header-section">
+          <h1 class="page-title">Accueil</h1>
+          <p class="header-subtitle">Tableau de bord</p>
         </div>
 
-        <!-- Statistiques rapides -->
-        <!-- <div class="stats-section">
-          <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(35, 206, 107, 0.1);">
-              <ion-icon :icon="carSportOutline" color="success"></ion-icon>
-            </div>
-            <div class="stat-info">
-              <h3>Véhicule actuel</h3>
-              <p>Renault Clio</p>
-            </div>
-          </div> -->
-          
-          <!-- <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(66, 153, 225, 0.1);">
-              <ion-icon :icon="calendarOutline" color="primary"></ion-icon>
-            </div>
-            <div class="stat-info">
-              <h3>Prochain RDV</h3>
-              <p>15 Novembre</p>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Services rapides -->
-        <div class="services-section">
-          <h2 class="section-title">Services disponibles</h2>
-          <p class="section-subtitle">Gérez votre véhicule en quelques clics</p>
-
-          <div class="services-grid">
-            <div class="service-card" @click="navigateTo('appointment')">
-              <div class="service-icon">
-                <ion-icon :icon="calendarNumberOutline" color="success"></ion-icon>
-              </div>
-              <h3>Prendre RDV</h3>
-              <p>Planifiez une réparation ou entretien</p>
-            </div>
-
-            <div class="service-card" @click="navigateTo('history')">
-              <div class="service-icon">
-                <ion-icon :icon="timeOutline" color="warning"></ion-icon>
-              </div>
-              <h3>Historique</h3>
-              <p>Consultez vos interventions passées</p>
-            </div>
-
-            <div class="service-card" @click="navigateTo('documents')">
-              <div class="service-icon">
-                <ion-icon :icon="documentTextOutline" color="tertiary"></ion-icon>
-              </div>
-              <h3>Documents</h3>
-              <p>Factures et garanties en ligne</p>
-            </div>
-
-            <div class="service-card" @click="navigateTo('emergency')">
-              <div class="service-icon">
-                <ion-icon :icon="warningOutline" color="danger"></ion-icon>
-              </div>
-              <h3>Urgence</h3>
-              <p>Assistance 24h/24</p>
-            </div>
-          </div>
+        <!-- Message de bienvenue -->
+        <div class="welcome-message">
+          <p>Bienvenue sur Garage Elite. Gérez vos véhicules et suivez vos réparations en temps réel.</p>
         </div>
 
-        <!-- Dernières interventions
-        <div class="recent-section">
-          <div class="section-header">
-            <h2 class="section-title">Dernières interventions</h2>
-            <ion-button fill="clear" size="small">Voir tout</ion-button>
-          </div>
-
-          <div class="intervention-list">
-            <div class="intervention-item">
-              <div class="intervention-info">
-                <h4>Vidange complète</h4>
-                <p>12 Octobre 2024 • 150€</p>
-              </div>
-              <ion-badge color="success">Terminé</ion-badge>
-            </div>
-
-            <div class="intervention-item">
-              <div class="intervention-info">
-                <h4>Changement pneus</h4>
-                <p>5 Septembre 2024 • 320€</p>
-              </div>
-              <ion-badge color="success">Terminé</ion-badge>
-            </div>
-
-            <div class="intervention-item">
-              <div class="intervention-info">
-                <h4>Contrôle technique</h4>
-                <p>20 Août 2024 • 75€</p>
-              </div>
-              <ion-badge color="success">Terminé</ion-badge>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Conseils d'entretien -->
-        <div class="tips-section">
-          <h2 class="section-title">Conseils du moment</h2>
-          
-          <div class="tip-card">
-            <ion-icon :icon="snowOutline" color="primary" slot="start"></ion-icon>
-            <div class="tip-content">
-              <h4>Préparer l'hiver</h4>
-              <p>Vérifiez vos pneus et liquides avant les températures froides</p>
-            </div>
-          </div>
-
-          <div class="tip-card">
-            <ion-icon :icon="speedometerOutline" color="warning" slot="start"></ion-icon>
-            <div class="tip-content">
-              <h4>Économiser du carburant</h4>
-              <p>Maintenez une pression correcte des pneus pour réduire la consommation</p>
-            </div>
-          </div>
+        <!-- Charge en cours -->
+        <div v-if="isLoading" class="loading-state">
+          <ion-spinner name="dots"></ion-spinner>
+          <p>Chargement de vos voitures...</p>
         </div>
 
-        <!-- Bouton de déconnexion principal -->
+        <template v-else>
+          <!-- Bouton Ajouter une voiture -->
+          <div class="add-car-section">
+            <button @click="addCar" class="add-car-btn">
+              <ion-icon :icon="addOutline" class="btn-icon"></ion-icon>
+              <span>Ajouter une voiture</span>
+            </button>
+          </div>
+
+          <!-- Liste des voitures par statut -->
+          <div class="cars-list-section">
+            <!-- En attente -->
+            <div class="status-group">
+              <h2 class="status-title">
+                <span class="status-badge pending">En attente</span>
+              </h2>
+              <div v-if="carsPending.length > 0" class="cars-group">
+                <div v-for="car in carsPending" :key="car.id" class="car-card pending-card">
+                  <div class="car-header">
+                    <div class="car-icon">
+                      <ion-icon :icon="carOutline"></ion-icon>
+                    </div>
+                    <div class="car-info">
+                      <h3 class="car-name">{{ car.immatriculation }}</h3>
+                      <p class="car-description">{{ car.description }}</p>
+                    </div>
+                  </div>
+                  <p class="car-date">Depuis le {{ formatDate(car.date_depot) }}</p>
+                </div>
+              </div>
+              <p v-else class="empty-state">Aucune voiture en attente</p>
+            </div>
+
+            <!-- En réparation -->
+            <div class="status-group">
+              <h2 class="status-title">
+                <span class="status-badge repairing">En reparation</span>
+              </h2>
+              <div v-if="carsRepairing.length > 0" class="cars-group">
+                <div v-for="car in carsRepairing" :key="car.id" class="car-card repairing-card">
+                  <div class="car-header">
+                    <div class="car-icon">
+                      <ion-icon :icon="carOutline"></ion-icon>
+                    </div>
+                    <div class="car-info">
+                      <h3 class="car-name">{{ car.immatriculation }}</h3>
+                      <p class="car-description">{{ car.description }}</p>
+                    </div>
+                  </div>
+                  <p class="car-date">En cours depuis le {{ formatDate(car.date_depot) }}</p>
+                </div>
+              </div>
+              <p v-else class="empty-state">Aucune voiture en réparation</p>
+            </div>
+
+            <!-- Prête -->
+            <div class="status-group">
+              <h2 class="status-title">
+                <span class="status-badge ready">Prête</span>
+              </h2>
+              <div v-if="carsReady.length > 0" class="cars-group">
+                <div v-for="car in carsReady" :key="car.id" class="car-card ready-card">
+                  <div class="car-header">
+                    <div class="car-icon">
+                      <ion-icon :icon="carOutline"></ion-icon>
+                    </div>
+                    <div class="car-info">
+                      <h3 class="car-name">{{ car.immatriculation }}</h3>
+                      <p class="car-description">{{ car.description }}</p>
+                    </div>
+                  </div>
+                  <p class="car-date">Prête depuis le {{ formatDate(car.date_depot) }}</p>
+                </div>
+              </div>
+              <p v-else class="empty-state">Aucune voiture prête</p>
+            </div>
+          </div>
+        </template>
+
+        <!-- Bouton de déconnexion -->
         <div class="logout-section">
-          <ion-button 
-            expand="block" 
-            color="medium"
+          <button 
             @click="logout" 
             :disabled="isLoggingOut"
             class="logout-btn"
           >
-            <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
+            <ion-icon :icon="logOutOutline" class="btn-icon"></ion-icon>
             <span v-if="!isLoggingOut">Se déconnecter</span>
             <ion-spinner v-else name="dots"></ion-spinner>
-          </ion-button>
-          
-          <p class="logout-note">Dernière connexion : Aujourd'hui, 14:30</p>
+          </button>
         </div>
       </div>
     </ion-content>
@@ -163,42 +116,117 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { auth } from "@/firebase";
-import { signOut } from "firebase/auth";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { db } from "@/firebase";
+import { ref as dbRef, get } from "firebase/database";
 import { 
   IonPage, 
-  IonHeader, 
-  IonContent, 
-  IonToolbar, 
-  IonTitle, 
-  IonButton,
-  IonSpinner,
+  IonContent,
   IonIcon,
-  IonButtons,
-  IonBadge
+  IonSpinner
 } from '@ionic/vue';
 import {
-  personCircleOutline,
-  carSportOutline,
-  calendarOutline,
-  calendarNumberOutline,
-  timeOutline,
-  documentTextOutline,
-  warningOutline,
   logOutOutline,
-  snowOutline,
-  speedometerOutline
+  carOutline,
+  addOutline
 } from 'ionicons/icons';
 
 const router = useRouter();
 const isLoggingOut = ref(false);
 
+// Voitures chargées depuis Firebase
+const cars = ref<Array<{
+  id: string;
+  immatriculation: string;
+  description: string;
+  statut_id: string;
+  date_depot: string;
+}>>([]);
+
+const isLoading = ref(true);
+
+// Formater la date
+const formatDate = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-FR', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  } catch {
+    return dateStr;
+  }
+};
+
+// Charger les voitures du client au montage
+onMounted(async () => {
+  try {
+    // Récupérer le client depuis localStorage
+    const clientStr = localStorage.getItem('client');
+    if (!clientStr) {
+      await router.push('/login');
+      return;
+    }
+
+    let clientId: string;
+    try {
+      const client = JSON.parse(clientStr);
+      clientId = client.id;
+    } catch {
+      console.error('Erreur: données de session invalides');
+      return;
+    }
+
+    // Charger les voitures depuis Firebase
+    const snapshot = await get(dbRef(db, 'voitures'));
+    if (snapshot.exists()) {
+      const allVoitures = snapshot.val();
+      
+      // Filtrer par client_uid
+      const clientCars = Object.entries(allVoitures)
+        .filter(([_, voiture]: [string, any]) => voiture.client_uid === clientId)
+        .map(([id, voiture]: [string, any]) => ({
+          id,
+          immatriculation: voiture.immatriculation,
+          description: voiture.description,
+          statut_id: voiture.statut_id,
+          date_depot: voiture.date_depot
+        }));
+
+      cars.value = clientCars;
+      console.log('Voitures chargées:', clientCars);
+    }
+  } catch (e) {
+    console.error('Erreur lors du chargement des voitures:', e);
+  } finally {
+    isLoading.value = false;
+  }
+});
+
+// Computed properties pour filtrer par statut (en fonction des vrais statuts Firebase)
+const carsPending = computed(() => 
+  cars.value.filter(car => car.statut_id === 'enAttente')
+);
+
+const carsRepairing = computed(() => 
+  cars.value.filter(car => car.statut_id === 'enReparation')
+);
+
+const carsReady = computed(() => 
+  cars.value.filter(car => car.statut_id === 'prete')
+);
+
+const addCar = () => {
+  router.push({ name: 'AddCar' });
+};
+
 const logout = async () => {
   isLoggingOut.value = true;
   try {
-    await signOut(auth);
+    // Auth is handled locally via Realtime DB + localStorage
+    localStorage.removeItem('client');
     await router.replace({ name: 'Login' });
   } catch (e) {
     console.error('Sign out failed:', e);
@@ -206,915 +234,374 @@ const logout = async () => {
     isLoggingOut.value = false;
   }
 };
-
-const navigateTo = (page: string) => {
-  // Pour l'instant, on montre une alerte
-  // À terme, cela naviguera vers les différentes pages
-  switch(page) {
-    case 'appointment':
-      alert("Fonctionnalité 'Prise de RDV' bientôt disponible !");
-      break;
-    case 'history':
-      alert("Fonctionnalité 'Historique' bientôt disponible !");
-      break;
-    case 'documents':
-      alert("Fonctionnalité 'Documents' bientôt disponible !");
-      break;
-    case 'emergency':
-      alert("Assistance technique : 01 23 45 67 89");
-      break;
-  }
-};
 </script>
 
 <style scoped>
 /* Variables de thème */
 :root {
-  --primary-bg: #11161E;
-  --accent-color: #23CE6B;
-  --primary-text: #FFFFFF;
-  --secondary-bg: #19212C;
-  --card-bg: #1A222E;
-  --border-color: #2D3748;
-  --success-color: #23CE6B;
-  --warning-color: #FFA726;
-  --danger-color: #FF6B6B;
-  --info-color: #4299E1;
+  --brand-orange: #E85002;
+  --brand-orange-dark: #C10801;
+  --brand-orange-light: #F16001;
+  --primary-black: #000000;
+  --primary-white: #F9F9F9;
+  --gray-medium: #646464;
+  --gray-light: #A7A7A7;
+  --gray-dark: #333333;
+  
+  --primary-bg: var(--primary-white);
+  --card-bg: #FFFFFF;
+  --border-color: rgba(0, 0, 0, 0.12);
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  
+  --status-pending: #FFA500;
+  --status-repairing: #E85002;
+  --status-ready: #059669;
+}
+
+ion-page {
+  background-color: var(--primary-bg);
+  color: var(--primary-black);
+}
+
+ion-content {
+  --background: var(--primary-bg);
+  --color: var(--primary-black);
+  --padding-start: 20px;
+  --padding-end: 20px;
+  --padding-top: 24px;
+  --padding-bottom: 24px;
 }
 
 /* Conteneur principal */
-.welcome-container {
-  max-width: 500px;
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 56px);
+  max-width: 440px;
   margin: 0 auto;
-  padding-bottom: 40px;
 }
 
-/* Section de bienvenue */
-.welcome-section {
-  text-align: center;
-  padding: 20px 0 30px;
-}
-
-.user-avatar {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-}
-
-.user-avatar ion-icon {
-  color: white;
-  font-size: 40px;
-}
-
-.welcome-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px;
-  color: white;
-}
-
-.welcome-subtitle {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-}
-
-/* Section statistiques */
-.stats-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid var(--border-color);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon ion-icon {
-  font-size: 24px;
-}
-
-.stat-info h3 {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 4px;
-  font-weight: 500;
-}
-
-.stat-info p {
-  font-size: 16px;
-  color: white;
-  margin: 0;
-  font-weight: 600;
-}
-
-/* Section services */
-.services-section {
-  margin-bottom: 30px;
-}
-
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-  margin: 0 0 8px;
-}
-
-.section-subtitle {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 20px;
-}
-
-.services-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.service-card {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  border: 1px solid var(--border-color);
-  transition: transform 0.2s ease, border-color 0.2s ease;
-  cursor: pointer;
-}
-
-.service-card:active {
-  transform: scale(0.98);
-  border-color: var(--accent-color);
-}
-
-.service-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(35, 206, 107, 0.1);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-}
-
-.service-card:nth-child(2) .service-icon {
-  background: rgba(255, 167, 38, 0.1);
-}
-
-.service-card:nth-child(3) .service-icon {
-  background: rgba(148, 100, 255, 0.1);
-}
-
-.service-card:nth-child(4) .service-icon {
-  background: rgba(255, 107, 107, 0.1);
-}
-
-.service-icon ion-icon {
-  font-size: 28px;
-}
-
-.service-card h3 {
-  font-size: 16px;
-  color: white;
-  margin: 0 0 6px;
-  font-weight: 600;
-}
-
-.service-card p {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Section récentes */
-.recent-section {
-  margin-bottom: 30px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* En-tête */
+.header-section {
+  padding: 0 0 24px;
+  border-bottom: 2px solid var(--border-color);
   margin-bottom: 16px;
 }
 
-.intervention-list {
-  background: var(--card-bg);
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-}
-
-.intervention-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.intervention-item:last-child {
-  border-bottom: none;
-}
-
-.intervention-info h4 {
-  font-size: 15px;
-  color: white;
+.page-title {
+  font-size: 32px;
+  font-weight: 800;
   margin: 0 0 4px;
-  font-weight: 600;
+  color: var(--primary-black);
+  letter-spacing: -0.5px;
 }
 
-.intervention-info p {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+.header-subtitle {
+  font-size: 16px;
+  color: var(--gray-medium);
   margin: 0;
+  font-weight: 500;
 }
 
-/* Section conseils */
-.tips-section {
-  margin-bottom: 30px;
-}
-
-.tip-card {
-  background: var(--card-bg);
-  border-radius: 16px;
+/* Message de bienvenue */
+.welcome-message {
+  background: linear-gradient(135deg, rgba(232, 80, 2, 0.08), rgba(193, 8, 1, 0.08));
+  border-radius: 12px;
   padding: 16px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--brand-orange);
+}
+
+.welcome-message p {
+  font-size: 15px;
+  color: var(--gray-dark);
+  margin: 0;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* État de chargement */
+.loading-state {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.loading-state p {
+  font-size: 14px;
+  color: var(--gray-medium);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Section ajouter une voiture */
+.add-car-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.add-car-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 340px;
+  height: 48px;
+  background: var(--brand-orange);
+  color: var(--primary-white);
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(232, 80, 2, 0.25);
+}
+
+.add-car-btn:active {
+  background: #D14802;
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(232, 80, 2, 0.35);
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
+/* Section liste des voitures */
+.cars-list-section {
+  flex: 1;
+  margin-bottom: 28px;
+}
+
+/* Groupe de statut */
+.status-group {
+  margin-bottom: 28px;
+}
+
+.status-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 14px;
+  color: var(--primary-black);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--primary-white);
+}
+
+.status-badge.pending {
+  background: var(--status-pending);
+}
+
+.status-badge.repairing {
+  background: var(--status-repairing);
+}
+
+.status-badge.ready {
+  background: var(--status-ready);
+}
+
+/* Groupe de cartes de voitures */
+.cars-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Carte de voiture */
+.car-card {
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1.5px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: all 0.2s ease;
+}
+
+.car-card:active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.car-header {
+  display: flex;
+  align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-  border: 1px solid var(--border-color);
 }
 
-.tip-card:last-child {
-  margin-bottom: 0;
-}
-
-.tip-card ion-icon {
-  font-size: 24px;
-  margin-top: 2px;
+.car-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, rgba(232, 80, 2, 0.1), rgba(193, 8, 1, 0.1));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.tip-content h4 {
-  font-size: 15px;
-  color: white;
-  margin: 0 0 6px;
-  font-weight: 600;
+.car-icon ion-icon {
+  font-size: 22px;
+  color: var(--brand-orange);
 }
 
-.tip-content p {
+.car-info {
+  flex: 1;
+}
+
+.car-name {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--primary-black);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.car-description {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--gray-medium);
   margin: 0;
-  line-height: 1.4;
+  font-weight: 400;
+  max-height: 32px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.car-date {
+  font-size: 13px;
+  color: var(--gray-medium);
+  margin: 0;
+  font-weight: 400;
+}
+
+.pending-card {
+  border-left: 4px solid var(--status-pending);
+}
+
+.repairing-card {
+  border-left: 4px solid var(--status-repairing);
+}
+
+.ready-card {
+  border-left: 4px solid var(--status-ready);
+}
+
+/* État vide */
+.empty-state {
+  text-align: center;
+  font-size: 14px;
+  color: var(--gray-light);
+  padding: 20px;
+  margin: 0;
+  font-weight: 500;
 }
 
 /* Section déconnexion */
 .logout-section {
   padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1.5px solid var(--border-color);
+  display: flex;
+  justify-content: center;
 }
 
 .logout-btn {
-  --background: #374151;
-  --background-activated: #4B5563;
-  --border-radius: 12px;
-  --padding-top: 18px;
-  --padding-bottom: 18px;
-  height: 52px;
-  font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 12px;
-}
-
-.logout-note {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  text-align: center;
-  margin: 0;
-}
-
-/* Responsive */
-@media (max-height: 700px) {
-  .welcome-section {
-    padding: 10px 0 20px;
-  }
-  
-  .user-avatar {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 16px;
-  }
-  
-  .welcome-title {
-    font-size: 22px;
-  }
-  
-  .services-grid {
-    gap: 10px;
-  }
-  
-  .service-card {
-    padding: 16px;
-  }
-}
-
-/* Support safe area iPhone */
-@supports (padding: max(0px)) {
-  ion-content {
-    --padding-start: max(20px, env(safe-area-inset-left));
-    --padding-end: max(20px, env(safe-area-inset-right));
-    --padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  
-  .welcome-container {
-    padding-left: max(8px, env(safe-area-inset-left));
-    padding-right: max(8px, env(safe-area-inset-right));
-  }
-}
-=======
-<template>
-  <ion-page>
-    <!-- <ion-header>
-      <ion-toolbar>
-        <ion-title>Mon Espace</ion-title>
-        <ion-buttons slot="end">
-          <ion-button @click="logout" :disabled="isLoggingOut">
-            <ion-icon :icon="logOutOutline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header> -->
-
-    <ion-content class="ion-padding">
-      <div class="welcome-container">
-        <!-- Section de bienvenue -->
-        <div class="welcome-section">
-          <div class="user-avatar">
-            <ion-icon :icon="personCircleOutline"></ion-icon>
-          </div>
-          <h1 class="welcome-title">Bienvenue sur Garage Elite</h1>
-          <p class="welcome-subtitle">Votre espace de gestion automobile</p>
-        </div>
-
-        <!-- Statistiques rapides -->
-        <!-- <div class="stats-section">
-          <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(35, 206, 107, 0.1);">
-              <ion-icon :icon="carSportOutline" color="success"></ion-icon>
-            </div>
-            <div class="stat-info">
-              <h3>Véhicule actuel</h3>
-              <p>Renault Clio</p>
-            </div>
-          </div> -->
-          
-          <!-- <div class="stat-card">
-            <div class="stat-icon" style="background: rgba(66, 153, 225, 0.1);">
-              <ion-icon :icon="calendarOutline" color="primary"></ion-icon>
-            </div>
-            <div class="stat-info">
-              <h3>Prochain RDV</h3>
-              <p>15 Novembre</p>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Services rapides -->
-        <div class="services-section">
-          <h2 class="section-title">Services disponibles</h2>
-          <p class="section-subtitle">Gérez votre véhicule en quelques clics</p>
-
-          <div class="services-grid">
-            <div class="service-card" @click="navigateTo('appointment')">
-              <div class="service-icon">
-                <ion-icon :icon="calendarNumberOutline" color="success"></ion-icon>
-              </div>
-              <h3>Prendre RDV</h3>
-              <p>Planifiez une réparation ou entretien</p>
-            </div>
-
-            <div class="service-card" @click="navigateTo('history')">
-              <div class="service-icon">
-                <ion-icon :icon="timeOutline" color="warning"></ion-icon>
-              </div>
-              <h3>Historique</h3>
-              <p>Consultez vos interventions passées</p>
-            </div>
-
-            <div class="service-card" @click="navigateTo('documents')">
-              <div class="service-icon">
-                <ion-icon :icon="documentTextOutline" color="tertiary"></ion-icon>
-              </div>
-              <h3>Documents</h3>
-              <p>Factures et garanties en ligne</p>
-            </div>
-
-            <div class="service-card" @click="navigateTo('emergency')">
-              <div class="service-icon">
-                <ion-icon :icon="warningOutline" color="danger"></ion-icon>
-              </div>
-              <h3>Urgence</h3>
-              <p>Assistance 24h/24</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dernières interventions
-        <div class="recent-section">
-          <div class="section-header">
-            <h2 class="section-title">Dernières interventions</h2>
-            <ion-button fill="clear" size="small">Voir tout</ion-button>
-          </div>
-
-          <div class="intervention-list">
-            <div class="intervention-item">
-              <div class="intervention-info">
-                <h4>Vidange complète</h4>
-                <p>12 Octobre 2024 • 150€</p>
-              </div>
-              <ion-badge color="success">Terminé</ion-badge>
-            </div>
-
-            <div class="intervention-item">
-              <div class="intervention-info">
-                <h4>Changement pneus</h4>
-                <p>5 Septembre 2024 • 320€</p>
-              </div>
-              <ion-badge color="success">Terminé</ion-badge>
-            </div>
-
-            <div class="intervention-item">
-              <div class="intervention-info">
-                <h4>Contrôle technique</h4>
-                <p>20 Août 2024 • 75€</p>
-              </div>
-              <ion-badge color="success">Terminé</ion-badge>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Conseils d'entretien -->
-        <div class="tips-section">
-          <h2 class="section-title">Conseils du moment</h2>
-          
-          <div class="tip-card">
-            <ion-icon :icon="snowOutline" color="primary" slot="start"></ion-icon>
-            <div class="tip-content">
-              <h4>Préparer l'hiver</h4>
-              <p>Vérifiez vos pneus et liquides avant les températures froides</p>
-            </div>
-          </div>
-
-          <div class="tip-card">
-            <ion-icon :icon="speedometerOutline" color="warning" slot="start"></ion-icon>
-            <div class="tip-content">
-              <h4>Économiser du carburant</h4>
-              <p>Maintenez une pression correcte des pneus pour réduire la consommation</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bouton de déconnexion principal -->
-        <div class="logout-section">
-          <ion-button 
-            expand="block" 
-            color="medium"
-            @click="logout" 
-            :disabled="isLoggingOut"
-            class="logout-btn"
-          >
-            <ion-icon :icon="logOutOutline" slot="start"></ion-icon>
-            <span v-if="!isLoggingOut">Se déconnecter</span>
-            <ion-spinner v-else name="dots"></ion-spinner>
-          </ion-button>
-          
-          <p class="logout-note">Dernière connexion : Aujourd'hui, 14:30</p>
-        </div>
-      </div>
-    </ion-content>
-  </ion-page>
-</template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-import { auth } from "@/firebase";
-import { signOut } from "firebase/auth";
-import { useRouter } from "vue-router";
-import { 
-  IonPage, 
-  IonHeader, 
-  IonContent, 
-  IonToolbar, 
-  IonTitle, 
-  IonButton,
-  IonSpinner,
-  IonIcon,
-  IonButtons,
-  IonBadge
-} from '@ionic/vue';
-import {
-  personCircleOutline,
-  carSportOutline,
-  calendarOutline,
-  calendarNumberOutline,
-  timeOutline,
-  documentTextOutline,
-  warningOutline,
-  logOutOutline,
-  snowOutline,
-  speedometerOutline
-} from 'ionicons/icons';
-
-const router = useRouter();
-const isLoggingOut = ref(false);
-
-const logout = async () => {
-  isLoggingOut.value = true;
-  try {
-    await signOut(auth);
-    await router.replace({ name: 'Login' });
-  } catch (e) {
-    console.error('Sign out failed:', e);
-  } finally {
-    isLoggingOut.value = false;
-  }
-};
-
-const navigateTo = (page: string) => {
-  // Pour l'instant, on montre une alerte
-  // À terme, cela naviguera vers les différentes pages
-  switch(page) {
-    case 'appointment':
-      alert("Fonctionnalité 'Prise de RDV' bientôt disponible !");
-      break;
-    case 'history':
-      alert("Fonctionnalité 'Historique' bientôt disponible !");
-      break;
-    case 'documents':
-      alert("Fonctionnalité 'Documents' bientôt disponible !");
-      break;
-    case 'emergency':
-      alert("Assistance technique : 01 23 45 67 89");
-      break;
-  }
-};
-</script>
-
-<style scoped>
-/* Variables de thème */
-:root {
-  --primary-bg: #11161E;
-  --accent-color: #23CE6B;
-  --primary-text: #FFFFFF;
-  --secondary-bg: #19212C;
-  --card-bg: #1A222E;
-  --border-color: #2D3748;
-  --success-color: #23CE6B;
-  --warning-color: #FFA726;
-  --danger-color: #FF6B6B;
-  --info-color: #4299E1;
-}
-
-/* Conteneur principal */
-.welcome-container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding-bottom: 40px;
-}
-
-/* Section de bienvenue */
-.welcome-section {
-  text-align: center;
-  padding: 20px 0 30px;
-}
-
-.user-avatar {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, #4F46E5, #7C3AED);
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px;
-}
-
-.user-avatar ion-icon {
-  color: white;
-  font-size: 40px;
-}
-
-.welcome-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 0 8px;
-  color: white;
-}
-
-.welcome-subtitle {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-}
-
-/* Section statistiques */
-.stats-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 30px;
-}
-
-.stat-card {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid var(--border-color);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
+  width: 100%;
+  max-width: 340px;
+  height: 46px;
+  background: var(--brand-orange);
+  color: var(--primary-white);
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.stat-icon ion-icon {
-  font-size: 24px;
-}
-
-.stat-info h3 {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 4px;
-  font-weight: 500;
-}
-
-.stat-info p {
-  font-size: 16px;
-  color: white;
-  margin: 0;
   font-weight: 600;
-}
-
-/* Section services */
-.services-section {
-  margin-bottom: 30px;
-}
-
-.section-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-  margin: 0 0 8px;
-}
-
-.section-subtitle {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 20px;
-}
-
-.services-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.service-card {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 20px;
-  text-align: center;
-  border: 1px solid var(--border-color);
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  font-size: 15px;
+  border: none;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(232, 80, 2, 0.25);
+  padding: 0 24px;
+  gap: 8px;
 }
 
-.service-card:active {
-  transform: scale(0.98);
-  border-color: var(--accent-color);
+.logout-btn:not(:disabled):active {
+  background: #D14802;
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(232, 80, 2, 0.35);
 }
 
-.service-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(35, 206, 107, 0.1);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-}
-
-.service-card:nth-child(2) .service-icon {
-  background: rgba(255, 167, 38, 0.1);
-}
-
-.service-card:nth-child(3) .service-icon {
-  background: rgba(148, 100, 255, 0.1);
-}
-
-.service-card:nth-child(4) .service-icon {
-  background: rgba(255, 107, 107, 0.1);
-}
-
-.service-icon ion-icon {
-  font-size: 28px;
-}
-
-.service-card h3 {
-  font-size: 16px;
-  color: white;
-  margin: 0 0 6px;
-  font-weight: 600;
-}
-
-.service-card p {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Section récentes */
-.recent-section {
-  margin-bottom: 30px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.intervention-list {
-  background: var(--card-bg);
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-}
-
-.intervention-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.intervention-item:last-child {
-  border-bottom: none;
-}
-
-.intervention-info h4 {
-  font-size: 15px;
-  color: white;
-  margin: 0 0 4px;
-  font-weight: 600;
-}
-
-.intervention-info p {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-}
-
-/* Section conseils */
-.tips-section {
-  margin-bottom: 30px;
-}
-
-.tip-card {
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 16px;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 12px;
-  border: 1px solid var(--border-color);
-}
-
-.tip-card:last-child {
-  margin-bottom: 0;
-}
-
-.tip-card ion-icon {
-  font-size: 24px;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.tip-content h4 {
-  font-size: 15px;
-  color: white;
-  margin: 0 0 6px;
-  font-weight: 600;
-}
-
-.tip-content p {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Section déconnexion */
-.logout-section {
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
-}
-
-.logout-btn {
-  --background: #374151;
-  --background-activated: #4B5563;
-  --border-radius: 12px;
-  --padding-top: 18px;
-  --padding-bottom: 18px;
-  height: 52px;
-  font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 12px;
-}
-
-.logout-note {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  text-align: center;
-  margin: 0;
+.logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Responsive */
-@media (max-height: 700px) {
-  .welcome-section {
-    padding: 10px 0 20px;
+@media (max-width: 350px) {
+  .page-title {
+    font-size: 28px;
   }
   
-  .user-avatar {
-    width: 64px;
-    height: 64px;
-    margin-bottom: 16px;
+  ion-content {
+    --padding-start: 16px;
+    --padding-end: 16px;
   }
   
-  .welcome-title {
-    font-size: 22px;
-  }
-  
-  .services-grid {
-    gap: 10px;
-  }
-  
-  .service-card {
-    padding: 16px;
+  .add-car-btn,
+  .logout-btn {
+    max-width: 300px;
+    font-size: 14.5px;
   }
 }
 
-/* Support safe area iPhone */
-@supports (padding: max(0px)) {
-  ion-content {
-    --padding-start: max(20px, env(safe-area-inset-left));
-    --padding-end: max(20px, env(safe-area-inset-right));
-    --padding-bottom: max(20px, env(safe-area-inset-bottom));
-  }
-  
-  .welcome-container {
-    padding-left: max(8px, env(safe-area-inset-left));
-    padding-right: max(8px, env(safe-area-inset-right));
+@media (min-width: 768px) {
+  .dashboard-container {
+    max-width: 400px;
   }
 }
->>>>>>> 934ad8d6 (Add files via upload)
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-group {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.status-group:nth-child(1) { animation-delay: 0.1s; }
+.status-group:nth-child(2) { animation-delay: 0.2s; }
+.status-group:nth-child(3) { animation-delay: 0.3s; }
+
+.car-card {
+  animation: fadeInUp 0.4s ease-out backwards;
+}
 </style>
