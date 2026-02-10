@@ -219,6 +219,60 @@ function handleGetRepairs() {
     return $out;
 }
 
+function handleGetArchivedRepairs() {
+    $archives = fb_get('archives/reparations') ?: [];
+    $voitures = fb_get('voitures') ?: [];
+    $types = fb_get('type_interventions') ?: [];
+    $out = [];
+    
+    $normalizeStatutId = function($val) {
+        if ($val === null) return null;
+        $s = (string)$val;
+        $s = mb_strtolower($s, 'UTF-8');
+        $mapAccents = ["é"=>"e","è"=>"e","ê"=>"e","à"=>"a","ù"=>"u","ç"=>"c"];
+        $s = str_replace(array_keys($mapAccents), array_values($mapAccents), $s);
+        $s = preg_replace('/[^a-z0-9]/', '', $s);
+        if (strpos($s, 'attente') !== false) return 'enAttente';
+        if (strpos($s, 'repar') !== false || strpos($s, 'encours') !== false) return 'enReparation';
+        if (strpos($s, 'termin') !== false) return 'terminee';
+        if (strpos($s, 'prete') !== false) return 'prete';
+        if (strpos($s, 'plan') !== false) return 'planifiee';
+        return $s;
+    };
+
+    foreach ($archives as $key => $r) {
+        if (is_object($r)) {
+            $r = (array)$r;
+        }
+        $voiture = null;
+        if (isset($voitures[$r['voiture_id']])) {
+            $voiture = is_object($voitures[$r['voiture_id']]) ? (array)$voitures[$r['voiture_id']] : $voitures[$r['voiture_id']];
+        }
+        $type = null;
+        if (isset($types[$r['type_intervention_id']])) {
+            $type = is_object($types[$r['type_intervention_id']]) ? (array)$types[$r['type_intervention_id']] : $types[$r['type_intervention_id']];
+        }
+        $statut_id = $normalizeStatutId($r['statut_id'] ?? $r['statut'] ?? null);
+        $out[] = [
+            'id' => (string)$key,
+            'created_at' => $r['created_at'] ?? null,
+            'voiture_id' => $r['voiture_id'] ?? null,
+            'immatriculation' => $voiture['immatriculation'] ?? null,
+            'intervention' => $type['nom'] ?? null,
+            'prix' => $type['prix'] ?? null,
+            'duree_secondes' => $type['duree_secondes'] ?? null,
+            'statut' => $r['statut'] ?? null,
+            'statut_id' => $statut_id,
+            'in_garage' => isset($r['in_garage']) ? boolval($r['in_garage']) : false,
+            'start_time' => $r['start_time'] ?? null,
+            'end_time' => $r['end_time'] ?? null,
+            'paid' => isset($r['paid']) ? boolval($r['paid']) : false,
+            'recovered' => isset($r['recovered']) ? boolval($r['recovered']) : false
+        ];
+    }
+    return $out;
+}
+
 function handleGetVoitures() {
     $voitures = fb_get('voitures') ?: [];
     $out = [];
@@ -534,6 +588,12 @@ if ($method === "POST" && preg_match('#/api/repairs/([^/]+)/move-to-waiting-slot
 // Remove repair from garage
 if ($method === "POST" && preg_match('#/api/repairs/([^/]+)/remove-from-garage#', $uri, $m)) {
     echo json_encode(handleRemoveFromGarage($m[1]));
+    exit();
+}
+
+// Repairs list - ARCHIVED
+if ($method === "GET" && strpos($uri, "/api/repairs/archived") !== false) {
+    echo json_encode(handleGetArchivedRepairs());
     exit();
 }
 

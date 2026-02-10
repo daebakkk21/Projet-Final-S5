@@ -970,6 +970,7 @@ function GaragePage() {
   const [selectedClient, setSelectedClient] = useState(null); // for details modal
   
   const load = () => {
+    // Only fetch active repairs (archived repairs with recovered:true should NOT appear in garage slots)
     fetch('http://localhost:8000/api/repairs')
       .then(r => r.json())
       .then(d => { if (Array.isArray(d)) setRepairs(d); else setRepairs([]); })
