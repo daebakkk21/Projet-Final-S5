@@ -46,7 +46,12 @@
                       <p class="car-description">{{ car.description }}</p>
                     </div>
                   </div>
-                  <p class="car-date">Depuis le {{ formatDate(car.date_depot) }}</p>
+                  <div class="car-footer">
+                    <p class="car-date">Depuis le {{ formatDate(car.date_depot) }}</p>
+                    <button @click="payRepair(car.id)" class="pay-icon-btn" title="Payer">
+                      <ion-icon :icon="cardOutline"></ion-icon>
+                    </button>
+                  </div>
                 </div>
               </div>
               <p v-else class="empty-state">Aucune voiture en attente</p>
@@ -68,7 +73,12 @@
                       <p class="car-description">{{ car.description }}</p>
                     </div>
                   </div>
-                  <p class="car-date">En cours depuis le {{ formatDate(car.date_depot) }}</p>
+                  <div class="car-footer">
+                    <p class="car-date">En cours depuis le {{ formatDate(car.date_depot) }}</p>
+                    <button @click="payRepair(car.id)" class="pay-icon-btn" title="Payer">
+                      <ion-icon :icon="cardOutline"></ion-icon>
+                    </button>
+                  </div>
                 </div>
               </div>
               <p v-else class="empty-state">Aucune voiture en réparation</p>
@@ -90,7 +100,12 @@
                       <p class="car-description">{{ car.description }}</p>
                     </div>
                   </div>
-                  <p class="car-date">Prête depuis le {{ formatDate(car.date_depot) }}</p>
+                  <div class="car-footer">
+                    <p class="car-date">Prête depuis le {{ formatDate(car.date_depot) }}</p>
+                    <button @click="payRepair(car.id)" class="pay-icon-btn" title="Payer">
+                      <ion-icon :icon="cardOutline"></ion-icon>
+                    </button>
+                  </div>
                 </div>
               </div>
               <p v-else class="empty-state">Aucune voiture prête</p>
@@ -118,8 +133,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { db } from "@/firebase";
-import { ref as dbRef, get } from "firebase/database";
+import { db } from "../firebase"
+import { ref as dbRef, get, onValue } from "firebase/database";
+
 import { 
   IonPage, 
   IonContent,
@@ -129,7 +145,8 @@ import {
 import {
   logOutOutline,
   carOutline,
-  addOutline
+  addOutline,
+  cardOutline
 } from 'ionicons/icons';
 
 const router = useRouter();
@@ -142,7 +159,17 @@ const cars = ref<Array<{
   description: string;
   statut_id: string;
   date_depot: string;
+  reparationId?: string;
+  reparationStatus?: string;
+  montantTotal?: number;
+  derivedStatus?: string;
 }>>([]);
+
+// Données de base (client ID, voitures, réparations)
+const clientId = ref<string>('');
+const allVoitures = ref<Record<string, any>>({});
+const allReparations = ref<Record<string, any>>({});
+const allPayments = ref<Record<string, any>>({});
 
 const isLoading = ref(true);
 
@@ -160,7 +187,79 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
-// Charger les voitures du client au montage
+// Fonction pour recalculer les voitures basée sur les réparations actuelles
+const updateCars = () => {
+  if (!clientId.value) return;
+
+  const updatedCars = Object.entries(allVoitures.value)
+    .filter(([_, voiture]: [string, any]) => voiture.client_uid === clientId.value)
+    .map(([id, voiture]: [string, any]) => {
+      // Récupérer toutes les réparations pour cette voiture
+      const reparationsForCar = Object.entries(allReparations.value)
+        .filter(([_, rep]: [string, any]) => rep.voiture_id === id)
+        .map(([repId, rep]: [string, any]) => ({ id: repId, ...rep }));
+
+      // Choisir la réparation la plus récente
+      let latestRep: any = undefined;
+      if (reparationsForCar.length > 0) {
+        latestRep = reparationsForCar.sort((a: any, b: any) => {
+          const aTime = new Date(a.created_at || a.start_time || 0).getTime();
+          const bTime = new Date(b.created_at || b.start_time || 0).getTime();
+          return bTime - aTime;
+        })[0];
+      }
+
+      const reparationId = latestRep ? latestRep.id : undefined;
+      const reparationStatus = latestRep ? latestRep.statut_id : undefined;
+
+      // Chercher le paiement pour cette réparation
+      let montantTotal = 0;
+      let paid = false;
+      if (reparationId) {
+        const payment = Object.entries(allPayments.value).find(
+          ([_, pay]: [string, any]) => pay.reparation_id === reparationId
+        );
+        if (payment) {
+          montantTotal = (payment[1] as any).montant_total || 0;
+          // Consider payment as completed if statut_id === 'complété' or paid flag present
+          paid = (payment[1] as any).statut_id === 'complété' || !!(payment[1] as any).paid;
+        }
+        // Also consider the repair's own paid flag
+        if (latestRep && latestRep.paid) {
+          paid = true;
+        }
+      }
+
+      // Dériver le statut affiché
+      let derivedStatus = voiture.statut_id;
+      if (reparationStatus === 'enCours') {
+        derivedStatus = 'enReparation';
+      } else if (reparationStatus === 'terminee') {
+        derivedStatus = 'prete';
+      } else if (reparationStatus === 'planifiee') {
+        derivedStatus = 'enAttente';
+      } else if (voiture.statut_id === 'prete') {
+        derivedStatus = 'prete';
+      }
+
+      return {
+        id,
+        immatriculation: voiture.immatriculation,
+        description: voiture.description,
+        statut_id: voiture.statut_id,
+        date_depot: voiture.date_depot,
+        reparationId,
+        reparationStatus,
+        montantTotal,
+        paid,
+        derivedStatus
+      };
+    });
+
+  cars.value = updatedCars;
+};
+
+// Charger les voitures du client au montage et ajouter les listeners
 onMounted(async () => {
   try {
     // Récupérer le client depuis localStorage
@@ -170,34 +269,74 @@ onMounted(async () => {
       return;
     }
 
-    let clientId: string;
     try {
       const client = JSON.parse(clientStr);
-      clientId = client.id;
+      clientId.value = client.id;
     } catch {
       console.error('Erreur: données de session invalides');
       return;
     }
 
-    // Charger les voitures depuis Firebase
-    const snapshot = await get(dbRef(db, 'voitures'));
-    if (snapshot.exists()) {
-      const allVoitures = snapshot.val();
-      
-      // Filtrer par client_uid
-      const clientCars = Object.entries(allVoitures)
-        .filter(([_, voiture]: [string, any]) => voiture.client_uid === clientId)
-        .map(([id, voiture]: [string, any]) => ({
-          id,
-          immatriculation: voiture.immatriculation,
-          description: voiture.description,
-          statut_id: voiture.statut_id,
-          date_depot: voiture.date_depot
-        }));
+    // Charger les données initiales
+    const voituresSnapshot = await get(dbRef(db, 'voitures'));
+    const reparationsSnapshot = await get(dbRef(db, 'reparations'));
+    const archivedReparationsSnapshot = await get(dbRef(db, 'archives/reparations'));
+    const paymentsSnapshot = await get(dbRef(db, 'paiements'));
 
-      cars.value = clientCars;
-      console.log('Voitures chargées:', clientCars);
+    if (voituresSnapshot.exists()) {
+      allVoitures.value = voituresSnapshot.val();
     }
+    if (reparationsSnapshot.exists()) {
+      allReparations.value = reparationsSnapshot.val();
+    }
+    // Fusionner les réparations archivées avec les réparations actives
+    if (archivedReparationsSnapshot.exists()) {
+      const archived = archivedReparationsSnapshot.val();
+      allReparations.value = { ...allReparations.value, ...archived };
+    }
+    if (paymentsSnapshot.exists()) {
+      allPayments.value = paymentsSnapshot.val();
+    }
+
+    // Calcul initial des voitures
+    updateCars();
+
+    // Ajouter un listener en temps réel sur les réparations
+    onValue(dbRef(db, 'reparations'), (snapshot) => {
+      if (snapshot.exists()) {
+        allReparations.value = snapshot.val();
+        // Recharger aussi les archives
+        get(dbRef(db, 'archives/reparations')).then(archivedSnapshot => {
+          if (archivedSnapshot.exists()) {
+            allReparations.value = { ...allReparations.value, ...archivedSnapshot.val() };
+          }
+          updateCars();
+        });
+      } else {
+        // Si aucune réparation active, charger juste les archives
+        get(dbRef(db, 'archives/reparations')).then(archivedSnapshot => {
+          if (archivedSnapshot.exists()) {
+            allReparations.value = archivedSnapshot.val();
+          }
+          updateCars();
+        });
+      }
+    });
+
+    // Ajouter un listener sur les archives pour les mises à jour en temps réel
+    onValue(dbRef(db, 'archives/reparations'), (snapshot) => {
+      if (snapshot.exists()) {
+        const activeReps = Object.entries(allReparations.value || {})
+          .filter(([key]) => !(allReparations.value[key]?.recovered === true))
+          .reduce((acc, [key, val]) => ({ ...acc, [key]: val }), {});
+        
+        allReparations.value = { ...activeReps, ...snapshot.val() };
+        console.log('🔄 Archives mises à jour:', snapshot.val());
+        updateCars();
+      }
+    });
+
+    console.log('✅ Voitures chargées et listeners configurés');
   } catch (e) {
     console.error('Erreur lors du chargement des voitures:', e);
   } finally {
@@ -205,21 +344,43 @@ onMounted(async () => {
   }
 });
 
-// Computed properties pour filtrer par statut (en fonction des vrais statuts Firebase)
-const carsPending = computed(() => 
-  cars.value.filter(car => car.statut_id === 'enAttente')
+// Computed properties pour filtrer par statut (utilisent maintenant `derivedStatus`)
+const carsPending = computed(() =>
+  cars.value.filter(car => car.derivedStatus === 'enAttente')
 );
 
-const carsRepairing = computed(() => 
-  cars.value.filter(car => car.statut_id === 'enReparation')
+const carsRepairing = computed(() =>
+  cars.value.filter(car => car.derivedStatus === 'enReparation')
 );
 
-const carsReady = computed(() => 
-  cars.value.filter(car => car.statut_id === 'prete')
+const carsReady = computed(() =>
+  cars.value.filter(car => car.derivedStatus === 'prete')
 );
 
 const addCar = () => {
   router.push({ name: 'AddCar' });
+};
+
+const payRepair = (carId: string) => {
+  const car = cars.value.find(c => c.id === carId);
+  if (!car) {
+    alert('Voiture non trouvée');
+    return;
+  }
+  
+  if (car.reparationId) {
+    // Si la voiture a une réparation, aller à la page de paiement
+    router.push({
+      name: 'Payment',
+      params: {
+        reparationId: car.reparationId,
+        carId: carId
+      }
+    });
+  } else {
+    // Sinon, afficher un message
+    alert('Aucune réparation associée pour cette voiture. Une réparation doit être lancée en premier.');
+  }
 };
 
 const logout = async () => {
@@ -237,35 +398,58 @@ const logout = async () => {
 </script>
 
 <style scoped>
-/* Variables de thème */
+/* Variables de thème - Luxe Rouge & Noir */
 :root {
-  --brand-orange: #E85002;
-  --brand-orange-dark: #C10801;
-  --brand-orange-light: #F16001;
-  --primary-black: #000000;
-  --primary-white: #F9F9F9;
-  --gray-medium: #646464;
-  --gray-light: #A7A7A7;
-  --gray-dark: #333333;
+  /* Palette Orange & Noir */
+  --primary: #E85002; /* Orange */
+  --primary-dark: #D14802;
+  --primary-light: #F16001;
+  --secondary: #000000; /* Noir */
+  --secondary-light: #1a1a1a;
+  --secondary-lighter: #2a2a2a;
+  --accent: #ffffff; /* Blanc pur */
+  --accent-dark: #f0f0f0;
+  --accent-light: #ffffff;
+  --gold: #D9C3AB; /* Beige pour accents */
+  --gold-dark: #C9A876;
   
-  --primary-bg: var(--primary-white);
-  --card-bg: #FFFFFF;
-  --border-color: rgba(0, 0, 0, 0.12);
-  --shadow-color: rgba(0, 0, 0, 0.08);
+  /* Utilitaires */
+  --success: #10b981;
+  --warning: #fbbf24;
+  --danger: #ef4444;
+  --info: #3b82f6;
   
-  --status-pending: #FFA500;
-  --status-repairing: #E85002;
-  --status-ready: #059669;
+  /* Ombres */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-orange: 0 4px 20px rgba(232, 80, 2, 0.3);
+  
+  /* Bordures */
+  --border-radius: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-full: 50px;
+  
+  /* Compatibilité */
+  --primary-bg: var(--secondary);
+  --card-bg: var(--secondary-lighter);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  
+  --status-pending: var(--warning);
+  --status-repairing: var(--primary);
+  --status-ready: var(--success);
 }
 
 ion-page {
-  background-color: var(--primary-bg);
-  color: var(--primary-black);
+  background-color: var(--secondary);
+  color: var(--accent);
+  font-family: 'Montserrat', sans-serif;
 }
 
 ion-content {
-  --background: var(--primary-bg);
-  --color: var(--primary-black);
+  --background: var(--secondary);
+  --color: var(--accent);
   --padding-start: 20px;
   --padding-end: 20px;
   --padding-top: 24px;
@@ -292,13 +476,15 @@ ion-content {
   font-size: 32px;
   font-weight: 800;
   margin: 0 0 4px;
-  color: var(--primary-black);
+  color: var(--accent);
   letter-spacing: -0.5px;
+  text-transform: uppercase;
+  text-shadow: 0 2px 10px rgba(255, 0, 0, 0.2);
 }
 
 .header-subtitle {
   font-size: 16px;
-  color: var(--gray-medium);
+  color: var(--gold);
   margin: 0;
   font-weight: 500;
 }
@@ -496,6 +682,15 @@ ion-content {
   font-weight: 400;
 }
 
+/* Pied de carte avec date et bouton paiement */
+.car-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  gap: 12px;
+}
+
 .pending-card {
   border-left: 4px solid var(--status-pending);
 }
@@ -506,6 +701,66 @@ ion-content {
 
 .ready-card {
   border-left: 4px solid var(--status-ready);
+}
+
+/* Petit bouton icone pour paiement */
+.pay-icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: var(--primary-white);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pay-icon-btn ion-icon {
+  font-size: 18px;
+}
+
+.pay-icon-btn:active {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: scale(0.95);
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
+}
+
+/* Ancien style à ne pas utiliser mais garder pour compatibilité */
+.pay-btn {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: var(--primary-white);
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.pay-btn:active {
+  background: linear-gradient(135deg, #047857, #065f46);
+  transform: translateY(1px);
+  box-shadow: 0 1px 4px rgba(5, 150, 105, 0.2);
+}
+
+.pay-btn .btn-icon {
+  font-size: 16px;
 }
 
 /* État vide */

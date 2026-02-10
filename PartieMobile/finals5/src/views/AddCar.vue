@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { db } from "@/firebase";
+import { db } from "../firebase"
 import { ref as dbRef, get, set } from "firebase/database";
 import {
   IonPage,
@@ -196,20 +196,50 @@ const submitForm = async () => {
 <style scoped>
 /* Variables de thème */
 :root {
-  --brand-orange: #E85002;
-  --brand-orange-dark: #D14802;
-  --primary-black: #000000;
-  --primary-white: #F9F9F9;
-  --gray-medium: #646464;
-  --gray-light: #A7A7A7;
-  --gray-dark: #333333;
+  /* Palette Orange & Noir */
+  --primary: #E85002; /* Orange */
+  --primary-dark: #D14802;
+  --primary-light: #F16001;
+  --secondary: #000000; /* Noir */
+  --secondary-light: #1a1a1a;
+  --secondary-lighter: #2a2a2a;
+  --accent: #ffffff; /* Blanc pur */
+  --accent-dark: #f0f0f0;
+  --accent-light: #ffffff;
+  --gold: #D9C3AB; /* Beige pour accents */
+  --gold-dark: #C9A876;
   
-  --primary-bg: var(--primary-white);
-  --card-bg: #FFFFFF;
-  --border-color: rgba(0, 0, 0, 0.12);
-  --shadow-color: rgba(0, 0, 0, 0.08);
-  --error-light: rgba(220, 38, 38, 0.1);
-  --success-light: rgba(5, 150, 105, 0.1);
+  /* Utilitaires */
+  --success: #00cc00;
+  --warning: #ff9900;
+  --danger: #ff3333;
+  --info: #0099ff;
+  
+  /* Ombres */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-red: 0 4px 20px rgba(255, 0, 0, 0.3);
+  
+  /* Bordures */
+  --border-radius: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-full: 50px;
+  
+  /* Compatibilité */
+  --brand-orange: var(--primary);
+  --brand-orange-dark: var(--primary-dark);
+  --primary-black: var(--secondary);
+  --primary-white: var(--accent);
+  --gray-medium: #a7a7a7;
+  --gray-light: #c0c0c0;
+  --gray-dark: #1a1a1a;
+  --primary-bg: var(--secondary);
+  --card-bg: var(--secondary-lighter);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --error-light: rgba(255, 51, 51, 0.1);
+  --success-light: rgba(0, 204, 0, 0.1);
 }
 
 ion-page {

@@ -139,28 +139,53 @@ const login = () => {
 </script>
 
 <style scoped>
-/* Variables de thème basées sur la palette orange/noir */
+/* Variables de thème - Luxe Rouge & Noir */
 :root {
-  --brand-orange: #E85002;
-  --brand-orange-rgb: 232, 80, 2;
-  --primary-black: #000000;
-  --primary-white: #F9F9F9;
-  --gray-medium: #646464;
-  --gray-light: #A7A7A7;
-  --gray-dark: #333333;
-  --gradient-1: #000000;
-  --gradient-2: #C10801;
-  --gradient-3: #F16001;
-  --gradient-4: #D9C3AB;
+  /* Palette Orange & Noir */
+  --primary: #E85002; /* Orange */
+  --primary-dark: #D14802;
+  --primary-light: #F16001;
+  --secondary: #000000; /* Noir */
+  --secondary-light: #1a1a1a;
+  --secondary-lighter: #2a2a2a;
+  --accent: #ffffff; /* Blanc pur */
+  --accent-dark: #f0f0f0;
+  --accent-light: #ffffff;
+  --gold: #D9C3AB; /* Beige pour accents */
+  --gold-dark: #C9A876;
   
-  /* Variables dérivées */
-  --primary-bg: var(--primary-white);
-  --card-bg: #FFFFFF;
-  --primary-text: var(--primary-black);
-  --secondary-text: var(--gray-dark);
-  --border-color: rgba(0, 0, 0, 0.08);
-  --shadow-color: rgba(0, 0, 0, 0.08);
+  /* Utilitaires */
+  --success: #10b981;
+  --warning: #fbbf24;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  
+  /* Ombres */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-orange: 0 4px 20px rgba(232, 80, 2, 0.3);
+  
+  /* Bordures */
+  --border-radius: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-full: 50px;
+  
+  /* Compatibilité */
+  --primary-bg: var(--secondary);
+  --card-bg: var(--secondary-lighter);
+  --primary-text: var(--accent);
+  --secondary-text: var(--accent-dark);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  
+  /* Gradients */
+  --gradient-1: var(--secondary);
+  --gradient-2: var(--primary-dark);
+  --gradient-3: var(--primary-light);
+  --gradient-4: var(--gold);
 }
+
 
 /* Styles généraux */
 ion-page {

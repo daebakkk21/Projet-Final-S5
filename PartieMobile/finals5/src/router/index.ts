@@ -14,24 +14,30 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/Login.vue')
+    component: () => import('../views/Login.vue')
   },
   {
     path: '/register',
     name: 'Register',
-    component: () => import('@/views/Register.vue')
+    component: () => import('../views/Register.vue')
   },
   {
     path: '/acceuil',
     name: 'Acceuil',
-    component: () => import('@/views/Acceuil.vue')
+    component: () => import('../views/Acceuil.vue')
   },
   {
     path: '/add-car',
     name: 'AddCar',
-    component: () => import('@/views/AddCar.vue')
+    component: () => import('../views/AddCar.vue')
+  },
+  {
+    path: '/payment/:reparationId/:carId',
+    name: 'Payment',
+    component: () => import('../views/Payment.vue')
   }
 ]
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),

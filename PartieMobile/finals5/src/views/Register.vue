@@ -205,7 +205,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
-import { db } from "@/firebase";
+import { db } from "../firebase"
 import { ref as dbRef, set } from "firebase/database";
 import {
   IonPage,
@@ -361,27 +361,48 @@ const register = async () => {
 </script>
 
 <style scoped>
-/* Variables de thème basées sur la palette orange/noir */
+/* Variables de thème - Luxe Rouge & Noir */
 :root {
-  --brand-orange: #E85002;
-  --brand-orange-dark: #C10801;
-  --brand-orange-light: #F16001;
-  --primary-black: #000000;
-  --primary-white: #F9F9F9;
-  --gray-medium: #646464;
-  --gray-light: #A7A7A7;
-  --gray-dark: #333333;
+  /* Palette Orange & Noir */
+  --primary: #E85002; /* Orange */
+  --primary-dark: #D14802;
+  --primary-light: #F16001;
+  --secondary: #000000; /* Noir */
+  --secondary-light: #1a1a1a;
+  --secondary-lighter: #2a2a2a;
+  --accent: #ffffff; /* Blanc pur */
+  --accent-dark: #f0f0f0;
+  --accent-light: #ffffff;
+  --gold: #D9C3AB; /* Beige pour accents */
+  --gold-dark: #C9A876;
   
-  /* Variables dérivées */
-  --primary-bg: var(--primary-white);
-  --card-bg: #FFFFFF;
-  --input-bg: #FFFFFF;
-  --primary-text: var(--primary-black);
-  --secondary-text: var(--gray-dark);
-  --border-color: rgba(0, 0, 0, 0.12);
-  --shadow-color: rgba(0, 0, 0, 0.08);
-  --error-color: #DC2626;
-  --success-color: #059669;
+  /* Utilitaires */
+  --success: #00cc00;
+  --warning: #ff9900;
+  --danger: #ff3333;
+  --info: #0099ff;
+  
+  /* Ombres */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-red: 0 4px 20px rgba(255, 0, 0, 0.3);
+  
+  /* Bordures */
+  --border-radius: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-full: 50px;
+  
+  /* Compatibilité */
+  --primary-bg: var(--secondary);
+  --card-bg: var(--secondary-lighter);
+  --input-bg: var(--secondary-light);
+  --primary-text: var(--accent);
+  --secondary-text: var(--accent-dark);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --error-color: #ff3333;
+  --success-color: #00cc00;
 }
 
 /* Styles généraux */

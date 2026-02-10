@@ -1,9 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
 
-// Utiliser l'URL de la Realtime Database fournie (sans ".json" ni paramètres)
 const firebaseConfig = {
-	databaseURL: "https://garage-5ef1a-default-rtdb.europe-west1.firebasedatabase.app"
+	databaseURL: "https://garage-5ef1a-default-rtdb.europe-west1.firebasedatabase.app",
+	// Note: For messaging to work, you need the full Firebase config with apiKey, authDomain, projectId, etc.
+	// Uncomment and add all required fields if you need cloud messaging
 };
 
 const app = initializeApp(firebaseConfig);
@@ -17,5 +18,3 @@ export const db = getDatabase(app);
 // Firebase Auth later, provide the full config (apiKey, authDomain,...).
 
 export default app;
-
-
