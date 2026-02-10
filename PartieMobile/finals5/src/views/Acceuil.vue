@@ -126,7 +126,7 @@
           </button>
         </div>
       </div>
-    </ion-content>
+    </ion-content>git commit -m "Application final update"
   </ion-page>
 </template>
 
