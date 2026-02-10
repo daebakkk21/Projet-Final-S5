@@ -1,3 +1,5 @@
+Il est complètement normal que chaque données prend un peu son temps pour apparaître.
+
 Ce projet est une application full-stack composée de :
   Partie Mobile : Application mobile 
   Partie Web : Interface web 
