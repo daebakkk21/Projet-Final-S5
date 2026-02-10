@@ -116,7 +116,7 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0 auto;
     padding: 0 40px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start; /* keep logo at left */
     align-items: center;
 }
 
@@ -180,8 +180,26 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-menu {
     display: flex;
-    gap: 30px;
+    gap: 8px; /* tighten spacing between items */
     align-items: center;
+    margin-left: auto; /* push menu to the right of the logo */
+}
+
+
+.nav-actions {
+    margin-left: 18px; /* small gap from main menu */
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* ensure actions stay right-most */
+.nav-actions { margin-left: 6px; }
+
+/* mobile: show actions under menu when opened */
+@media (max-width: 880px) {
+    .nav-actions { display: none; }
+    .nav-menu.active + .nav-actions { display: flex; flex-direction: column; gap: 8px; margin-left: 0; width: 100%; }
 }
 
 .nav-item {

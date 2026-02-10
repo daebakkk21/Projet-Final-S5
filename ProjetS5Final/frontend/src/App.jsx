@@ -20,14 +20,8 @@ function Navigation() {
           <Link to="/" className="nav-item active" onClick={() => setNavMenuOpen(false)}>
             <i className="fas fa-home"></i><span>Accueil</span>
           </Link>
-          <Link to="/login" className="nav-item" onClick={() => setNavMenuOpen(false)}>
-            <i className="fas fa-sign-in-alt"></i><span>Connexion</span>
-          </Link>
-          <Link to="/register" className="nav-item nav-cta" onClick={() => setNavMenuOpen(false)}>
-            <i className="fas fa-user-plus"></i><span>S'inscrire</span>
-          </Link>
           <Link to="/frontend" className="nav-item" onClick={() => setNavMenuOpen(false)}>
-            <i className="fas fa-list"></i><span>Frontend</span>
+            <i className="fas fa-users"></i><span>Liste utilisateurs</span>
           </Link>
           <Link to="/repairs" className="nav-item" onClick={() => setNavMenuOpen(false)}>
             <i className="fas fa-car-side"></i><span>Réparations</span>
@@ -36,7 +30,15 @@ function Navigation() {
             <i className="fas fa-warehouse"></i><span>Garage</span>
           </Link>
           <Link to="/admin" className="nav-item" onClick={() => setNavMenuOpen(false)}>
-            <i className="fas fa-tools"></i><span>Admin</span>
+            <i className="fas fa-cog"></i><span>Admin</span>
+          </Link>
+        </div>
+        <div className={`nav-actions ${navMenuOpen ? 'active' : ''}`}>
+          <Link to="/login" className="nav-item" onClick={() => setNavMenuOpen(false)}>
+            <i className="fas fa-sign-in-alt"></i><span>Connexion</span>
+          </Link>
+          <Link to="/register" className="nav-item nav-cta" onClick={() => setNavMenuOpen(false)}>
+            <i className="fas fa-user-plus"></i><span>S'inscrire</span>
           </Link>
         </div>
         <button className="mobile-toggle" onClick={() => setNavMenuOpen(!navMenuOpen)}>
@@ -457,31 +459,6 @@ function AdminDashboard() {
       <h2>Admin — Gestion des interventions</h2>
       <div style={{display: 'flex', gap: '20px', marginTop: '20px'}}>
         <div style={{flex: 1}}>
-          <form onSubmit={addIntervention} style={{marginBottom: '20px'}}>
-            <div className="form-group-luxe">
-              <label>Nom de l'intervention</label>
-              <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="input-luxe" />
-            </div>
-            <div className="form-row">
-              <div className="form-group-luxe">
-                <label>Prix (€)</label>
-                <input value={form.price} onChange={e => setForm({...form, price: e.target.value})} className="input-luxe" />
-              </div>
-              <div className="form-group-luxe">
-                <label>Durée</label>
-                <div style={{display:'flex', gap:8}}>
-                  <input value={form.duration} onChange={e => setForm({...form, duration: e.target.value})} className="input-luxe" style={{flex:1}} />
-                  <select value={form.unit || 's'} onChange={e => setForm({...form, unit: e.target.value})} className="input-luxe" style={{width:140}}>
-                    <option value="s">Secondes (s)</option>
-                    <option value="h">Heures (h)</option>
-                    <option value="d">Jours (d)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <button className="btn btn-luxe-primary" type="submit">Ajouter le type</button>
-          </form>
-
           <table className="table" style={{width: '100%'}}>
             <thead>
               <tr><th>Nom</th><th>Prix (€)</th><th>Durée (s)</th></tr>
@@ -500,7 +477,7 @@ function AdminDashboard() {
           
           <div style={{marginTop: 20}}>
             <h4>Réparations (base)</h4>
-            <div className="card">
+            <div className="card" style={{marginTop: 40}}>
               {repairs.length === 0 ? (
                 <p>Aucune réparation enregistrée.</p>
               ) : (
