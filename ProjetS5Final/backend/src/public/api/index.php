@@ -140,8 +140,13 @@ function handleGetClients() {
     $clients = fb_get('clients') ?: [];
     $out = [];
     foreach ($clients as $key => $c) {
-        $c['id'] = $key;
-        $out[] = $c;
+        if (is_object($c)) {
+            $c = (array)$c;
+        }
+        if (is_array($c)) {
+            $c['id'] = (string)$key;  // Force string type for consistent comparison
+            $out[] = $c;
+        }
     }
     return $out;
 }
@@ -151,11 +156,51 @@ function handleGetRepairs() {
     $voitures = fb_get('voitures') ?: [];
     $types = fb_get('type_interventions') ?: [];
     $out = [];
+    // helper: normalize statut_id or derive from human-readable statut
+    $normalizeStatutId = function($val) {
+        if ($val === null) return null;
+        // force to string
+        $s = (string)$val;
+        // lower, remove accents
+        $s = mb_strtolower($s, 'UTF-8');
+        $mapAccents = ["é"=>"e","è"=>"e","ê"=>"e","à"=>"a","ù"=>"u","ç"=>"c"];
+        $s = str_replace(array_keys($mapAccents), array_values($mapAccents), $s);
+        // remove non-alphanum
+        $s = preg_replace('/[^a-z0-9]/', '', $s);
+
+        if (strpos($s, 'attente') !== false) return 'enAttente';
+        if (strpos($s, 'repar') !== false || strpos($s, 'encours') !== false || strpos($s, 'encour') !== false) return 'enReparation';
+        if (strpos($s, 'termin') !== false) return 'terminee';
+        if (strpos($s, 'prete') !== false) return 'prete';
+        if (strpos($s, 'plan') !== false) return 'planifiee';
+        // fallback: return original cleaned string
+        return $s;
+    };
+
     foreach ($reps as $key => $r) {
-        $voiture = isset($voitures[$r['voiture_id']]) ? $voitures[$r['voiture_id']] : null;
-        $type = isset($types[$r['type_intervention_id']]) ? $types[$r['type_intervention_id']] : null;
+        // Convert to array if it's an object
+        if (is_object($r)) {
+            $r = (array)$r;
+        }
+        // Skip recovered repairs (they should not appear in any slot)
+        if (isset($r['recovered']) && $r['recovered'] === true) {
+            continue;
+        }
+        $voiture = null;
+        if (isset($voitures[$r['voiture_id']])) {
+            $voiture = is_object($voitures[$r['voiture_id']]) ? (array)$voitures[$r['voiture_id']] : $voitures[$r['voiture_id']];
+        }
+        $type = null;
+        if (isset($types[$r['type_intervention_id']])) {
+            $type = is_object($types[$r['type_intervention_id']]) ? (array)$types[$r['type_intervention_id']] : $types[$r['type_intervention_id']];
+        }
+        // compute statut_id: prefer explicit field, else derive from 'statut'
+        $statut_id = null;
+        if (isset($r['statut_id'])) $statut_id = $normalizeStatutId($r['statut_id']);
+        elseif (isset($r['statut'])) $statut_id = $normalizeStatutId($r['statut']);
+
         $out[] = [
-            'id' => $key,
+            'id' => (string)$key,
             'created_at' => $r['created_at'] ?? null,
             'voiture_id' => $r['voiture_id'] ?? null,
             'immatriculation' => $voiture['immatriculation'] ?? null,
@@ -163,11 +208,28 @@ function handleGetRepairs() {
             'prix' => $type['prix'] ?? null,
             'duree_secondes' => $type['duree_secondes'] ?? null,
             'statut' => $r['statut'] ?? null,
+            'statut_id' => $statut_id,
             'in_garage' => isset($r['in_garage']) ? boolval($r['in_garage']) : false,
             'start_time' => $r['start_time'] ?? null,
             'end_time' => $r['end_time'] ?? null,
-            'paid' => isset($r['paid']) ? boolval($r['paid']) : false
+            'paid' => isset($r['paid']) ? boolval($r['paid']) : false,
+            'recovered' => isset($r['recovered']) ? boolval($r['recovered']) : false
         ];
+    }
+    return $out;
+}
+
+function handleGetVoitures() {
+    $voitures = fb_get('voitures') ?: [];
+    $out = [];
+    foreach ($voitures as $key => $v) {
+        if (is_object($v)) {
+            $v = (array)$v;
+        }
+        if (is_array($v)) {
+            $v['id'] = (string)$key;
+            $out[] = $v;
+        }
     }
     return $out;
 }
@@ -245,6 +307,7 @@ function handleAddToGarage($repairId) {
     if (!$target) return ['success' => false, 'message' => 'Réparation introuvable'];
 
     $target['in_garage'] = true;
+    $target['statut_id'] = 'enCours';  // Change status to "in progress"
     if (empty($target['start_time'])) $target['start_time'] = date('c');
     // if duree known, compute end_time
     $types = fb_get('type_interventions') ?: [];
@@ -268,6 +331,20 @@ function handleMarkAsPaid($repairId) {
     return ['success' => true, 'repair' => $res];
 }
 
+// Move repair to waiting slot (without archiving) - just remove from garage
+function handleMoveToWaitingSlot($repairId) {
+    if (!$repairId) return ['success' => false, 'message' => 'Missing repair id'];
+    $reps = fb_get('reparations') ?: [];
+    $target = $reps[$repairId] ?? null;
+    if (!$target) return ['success' => false, 'message' => 'Réparation introuvable'];
+    
+    // Just set in_garage to false - DO NOT set recovered (keeps car visible in waiting slot)
+    $target['in_garage'] = false;
+    
+    $res = fb_put('reparations/' . $repairId, $target);
+    return ['success' => true, 'message' => 'Déplacée au slot d\'attente', 'repair' => $res];
+}
+
 // Remove repair from garage (archive it with recovered flag)
 function handleRemoveFromGarage($repairId) {
     if (!$repairId) return ['success' => false, 'message' => 'Missing repair id'];
@@ -287,6 +364,29 @@ function handleRemoveFromGarage($repairId) {
     fb_put('reparations/' . $repairId, null);
     
     return ['success' => true, 'message' => 'Voiture récupérée et archivée'];
+}
+
+// Update repair fields (partial update) - used to change statut_id to 'terminee', etc.
+function handleUpdateRepair($repairId) {
+    if (!$repairId) return ['success' => false, 'message' => 'Missing repair id'];
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($data)) return ['success' => false, 'message' => 'Invalid payload'];
+
+    $reps = fb_get('reparations') ?: [];
+    $target = $reps[$repairId] ?? null;
+    if (!$target) return ['success' => false, 'message' => 'Réparation introuvable'];
+
+    $allowed = ['statut_id', 'in_garage', 'start_time', 'end_time', 'paid', 'recovered', 'statut'];
+    $updates = [];
+    foreach ($allowed as $k) {
+        if (array_key_exists($k, $data)) $updates[$k] = $data[$k];
+    }
+
+    if (empty($updates)) return ['success' => false, 'message' => 'Aucun champ autorisé fourni'];
+
+    $res = fb_patch('reparations/' . $repairId, $updates);
+    $new = fb_get('reparations/' . $repairId) ?: $res;
+    return ['success' => true, 'repair' => $new];
 }
 
 // DEBUG endpoint: create test repairs
@@ -363,7 +463,15 @@ function handleCreateTestRepairs() {
 function handleGetTypes() {
     $types = fb_get('type_interventions') ?: [];
     $out = [];
-    foreach ($types as $k => $t) { $t['id'] = $k; $out[] = $t; }
+    foreach ($types as $k => $t) {
+        if (is_object($t)) {
+            $t = (array)$t;
+        }
+        if (is_array($t)) {
+            $t['id'] = (string)$k;
+            $out[] = $t;
+        }
+    }
     return $out;
 }
 
@@ -417,6 +525,12 @@ if ($method === "POST" && preg_match('#/api/repairs/([^/]+)/mark-paid#', $uri, $
     exit();
 }
 
+// Move repair to waiting slot
+if ($method === "POST" && preg_match('#/api/repairs/([^/]+)/move-to-waiting-slot#', $uri, $m)) {
+    echo json_encode(handleMoveToWaitingSlot($m[1]));
+    exit();
+}
+
 // Remove repair from garage
 if ($method === "POST" && preg_match('#/api/repairs/([^/]+)/remove-from-garage#', $uri, $m)) {
     echo json_encode(handleRemoveFromGarage($m[1]));
@@ -435,6 +549,18 @@ if ($method === "POST" && strpos($uri, "/api/repairs") !== false) {
     exit();
 }
 
+// Update repair (partial) - PUT /api/repairs/{id}
+if ($method === "PUT" && preg_match('#/api/repairs/([^/]+)$#', $uri, $m)) {
+    echo json_encode(handleUpdateRepair($m[1]));
+    exit();
+}
+
+// Voitures list
+if ($method === "GET" && strpos($uri, "/api/voitures") !== false) {
+    echo json_encode(handleGetVoitures());
+    exit();
+}
+
 // Type interventions list
 if ($method === "GET" && strpos($uri, "/api/type_interventions") !== false) {
     echo json_encode(handleGetTypes());
@@ -450,63 +576,6 @@ if ($method === "POST" && strpos($uri, "/api/type_interventions") !== false) {
 // DEBUG: create test repairs (one-time setup)
 if ($method === "GET" && strpos($uri, "/api/setup/create-test-repairs") !== false) {
     echo json_encode(handleCreateTestRepairs());
-    exit();
-}
-
-// Default 404
-http_response_code(404);
-echo json_encode(["error" => "Route not found: " . $uri]);
-?>
-
-// Route dispatcher
-$method = $_SERVER["REQUEST_METHOD"];
-$uri = $_SERVER["REQUEST_URI"];
-
-// Check for login
-if ($method === "POST" && strpos($uri, "/api/auth/login") !== false) {
-    echo json_encode(handleAuthLogin());
-    exit();
-}
-
-// Check for register
-if ($method === "POST" && strpos($uri, "/api/auth/register") !== false) {
-    echo json_encode(handleAuthRegister());
-    exit();
-}
-
-// Check for API root
-if ($method === "GET" && strpos($uri, "/api/index.php") !== false) {
-    echo json_encode(["message" => "Garage Elite API v1.0"]);
-    exit();
-}
-
-// Clients list
-if ($method === "GET" && strpos($uri, "/api/clients") !== false) {
-    echo json_encode(handleGetClients());
-    exit();
-}
-
-// Repairs list
-if ($method === "GET" && strpos($uri, "/api/repairs") !== false) {
-    echo json_encode(handleGetRepairs());
-    exit();
-}
-
-// Add repair
-if ($method === "POST" && strpos($uri, "/api/repairs") !== false) {
-    echo json_encode(handleAddRepair());
-    exit();
-}
-
-// Type interventions list
-if ($method === "GET" && strpos($uri, "/api/type_interventions") !== false) {
-    echo json_encode(handleGetTypes());
-    exit();
-}
-
-// Add type intervention
-if ($method === "POST" && strpos($uri, "/api/type_interventions") !== false) {
-    echo json_encode(handleAddType());
     exit();
 }
 

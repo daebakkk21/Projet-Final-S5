@@ -11,6 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
 }
 
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../firebase_rest.php';
 
 function route_auth_login() {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -126,6 +127,57 @@ function route_auth_register() {
     }
 }
 
+function route_get_clients() {
+    $clients_data = fb_get('/clients');
+    if ($clients_data === null) {
+        return [];
+    }
+    // Convertir l'objet Firebase {id: {...}, id2: {...}} en array
+    $clients = [];
+    foreach ($clients_data as $id => $data) {
+        if (is_array($data) || is_object($data)) {
+            $client = (array)$data;
+            $client['id'] = $id;
+            $clients[] = $client;
+        }
+    }
+    return $clients;
+}
+
+function route_get_voitures() {
+    $voitures_data = fb_get('/voitures');
+    if ($voitures_data === null) {
+        return [];
+    }
+    // Convertir l'objet Firebase {id: {...}, id2: {...}} en array
+    $voitures = [];
+    foreach ($voitures_data as $id => $data) {
+        if (is_array($data) || is_object($data)) {
+            $voiture = (array)$data;
+            $voiture['id'] = $id;
+            $voitures[] = $voiture;
+        }
+    }
+    return $voitures;
+}
+
+function route_get_repairs() {
+    $repairs_data = fb_get('/reparations');
+    if ($repairs_data === null) {
+        return [];
+    }
+    // Convertir l'objet Firebase {id: {...}, id2: {...}} en array
+    $repairs = [];
+    foreach ($repairs_data as $id => $data) {
+        if (is_array($data) || is_object($data)) {
+            $repair = (array)$data;
+            $repair['id'] = $id;
+            $repairs[] = $repair;
+        }
+    }
+    return $repairs;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 $uri = $_SERVER['REQUEST_URI'];
 
@@ -134,6 +186,15 @@ if ($method === 'POST' && strpos($uri, '/api/auth/login') !== false) {
 }
 if ($method === 'POST' && strpos($uri, '/api/auth/register') !== false) {
     echo json_encode(route_auth_register()); exit();
+}
+if ($method === 'GET' && strpos($uri, '/api/clients') !== false) {
+    echo json_encode(route_get_clients()); exit();
+}
+if ($method === 'GET' && strpos($uri, '/api/voitures') !== false) {
+    echo json_encode(route_get_voitures()); exit();
+}
+if ($method === 'GET' && strpos($uri, '/api/repairs') !== false) {
+    echo json_encode(route_get_repairs()); exit();
 }
 if ($method === 'GET' && strpos($uri, '/api') !== false) {
     echo json_encode(['message' => 'Garage Elite API v1.0']); exit();

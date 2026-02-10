@@ -58,47 +58,6 @@ Puis une fois connecté:
 USE garage_elite;
 ```
 
-### Commandes Utiles dans MySQL
-
-```sql
--- Voir toutes les tables
-SHOW TABLES;
-
--- Voir la structure d'une table
-DESCRIBE clients;
-DESCRIBE voitures;
-DESCRIBE admins;
-
--- Voir les données
-SELECT * FROM clients;
-SELECT * FROM statut_voitures;
-SELECT * FROM statut_reparations;
-SELECT * FROM statut_paiements;
-
--- Insérer des données de test
-INSERT INTO clients (firebase_uid, nom, prenom, email) VALUES 
-('user_001', 'Dupont', 'Jean', 'jean.dupont@example.com');
-
-INSERT INTO admins (nom, prenom, email, mdp) VALUES 
-('Martin', 'Admin', 'admin@garage-elite.com', 'password123');
-
--- Quitter MySQL
-exit
-```
-
-### Réinitialiser la Base de Données Complètement
-```powershell
-# Arrêter les conteneurs
-docker-compose down
-
-# Supprimer le volume MySQL
-docker volume rm projets5final_mysql_data
-
-# Redémarrer (la base sera recréée à partir de init.sql)
-docker-compose up -d
-```
-
----
 
 ## 🌐 Accès aux Applications
 
